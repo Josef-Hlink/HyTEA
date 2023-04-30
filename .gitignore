@@ -1,3 +1,9 @@
+# python stuff
 venv
 __pycache__
 hytea.egg-info
+
+# general
+docs/report
+.vscode
+wandb

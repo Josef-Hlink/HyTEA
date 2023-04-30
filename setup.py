@@ -18,6 +18,8 @@ setup(
         'pandas',
         'scikit-learn',
         'matplotlib',
+        'jupyter',
+        'ipykernel',
         'seaborn',
         'gym',
         'torch',
