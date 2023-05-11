@@ -3,7 +3,7 @@
 ### ARCHITECTURE
 
 - number of hidden layers [2 bits: 00 is one, 01 is two, 10 is three, 11 is four]
-- kind of hidden layers [2 bits: 00 is dense, 01 is convolutional, 10 is pooling, 11 is invalid(?)]
+- dropout rate [2 bits: 00 is 0%, 01 is 10%, 10 is 20%, 11 is 30%]
 - number of neurons per layer [3 bits: 000 is 2^1, 001 is 2^2, 010 is 2^3, 011 is 2^4, 100 is 2^5, 101 is 2^6, 110 is 2^7, 111 is 2^8]
 - activation function for hidden layers [2 bits: 00 for linear, 01 for relu, 10 for sigmoid, 11 for tanh]
 - activation function for output layer [2 bits: same as above]
@@ -16,11 +16,11 @@
 
 ## EXAMPLE
 
-example bitstring would be: [01_00_010_01_10_00_11_1]
+example bitstring would be: [01_10_010_01_10_00_11_1] (length 18)
 
 This bitstring would equate to a model with:
 
-- 2 dense hidden layers with 2^3 (8) neurons each
+- 2 dense hidden layers with 2^3 (8) neurons each (with a 20% dropout rate after each layer)
 - relu activation function for hidden layers
 - sigmoid activation function for output layer
 - Adam optimizer with learning rate of 10^-2 and lr decay rate of .85
