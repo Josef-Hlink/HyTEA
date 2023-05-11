@@ -11,6 +11,7 @@ setup(
     entry_points = {
         'console_scripts': [
             'hytea = hytea.cli:main',
+            'test = hytea.main:main'
         ],
     },
     install_requires = [
@@ -24,5 +25,6 @@ setup(
         'gym',
         'torch',
         'wandb',
+        'tqdm'
     ],
 )
