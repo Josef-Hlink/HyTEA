@@ -1,33 +1,48 @@
-import gym.envs.box2d as environments
+from gym.envs.box2d import BipedalWalker, CarRacing, LunarLander
 import torch
 
-# aliases
-BipedalWalker = environments.BipedalWalker
-CarRacing = environments.CarRacing
-LunarLander = environments.LunarLander
 
-class OurOwnEnv():
-    
-    def __init__(self, device: torch.device):
-        self.device = device
-        return
-    
-    def step(self, action):
-        state, reward, done, info = super().step(action)
-        return torch.Tensor(state, self.device), reward, done, False, info
-
-    def reset(self):
-        state = super().reset()
-        return state, None
-
-
-class BipedalWalkerEnv(BipedalWalker, OurOwnEnv):
+class BipedalWalkerEnv(BipedalWalker):
 
     def __init__(self, device: torch.device):
         super().__init__()
-        OurOwnEnv.__init__(self, device)
+        self.device = device
         return
     
+    def reset(self) -> torch.Tensor:
+        state, _ = super().reset()
+        return torch.tensor(state, torch.float32, self.device)
+
     def step(self, action: int) -> torch.Tensor:
         state, reward, done, trunc, info = super().step(action)
-        return OurOwnEnv.step(self, action)
+        return torch.tensor(state, torch.float32, self.device), reward, done, trunc, info
+
+class CarRacingEnv(CarRacing):
+
+    def __init__(self, device: torch.device):
+        super().__init__()
+        self.device = device
+        return
+    
+    def reset(self) -> torch.Tensor:
+        state, _ = super().reset()
+        return torch.tensor(state, torch.float32, self.device)
+
+    def step(self, action: int) -> torch.Tensor:
+        state, reward, done, trunc, info = super().step(action)
+        return torch.tensor(state, torch.float32, self.device), reward, done, trunc, info
+    
+class LunarLanderEnv(LunarLander):
+
+    def __init__(self, device: torch.device):
+        super().__init__()
+        self.device = device
+        return
+    
+    def reset(self) -> torch.Tensor:
+        state, _ = super().reset()
+        return torch.tensor(state, torch.float32, self.device)
+
+    def step(self, action: int) -> torch.Tensor:
+        state, reward, done, trunc, info = super().step(action)
+        return torch.tensor(state, torch.float32, self.device), reward, done, trunc, info

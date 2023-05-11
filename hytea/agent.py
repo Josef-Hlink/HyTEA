@@ -1,17 +1,10 @@
 #!/usr/bin/env python3
 
-from hytea.transitions import Transition, Trajectory
+from hytea.transitions import Trajectory
+from hytea.model import Model
 
 import torch
-import torch.nn.functional as F
 from gym import Env
-
-
-"""
-model that is very flexible and can take a lot of args
-"""
-
-from hytea.model import Model
 
 
 class DQNAgent:
@@ -35,33 +28,25 @@ class DQNAgent:
     
     def train(self, num_episodes: int, env: Env) -> None:
         self.env = env
-
-        pass
+        for episode in range(num_episodes):
+            trajectory = self.sample_episode()
+            self.learn(trajectory)
+            self.anneal_epsilon()
+            self.scheduler.step()
+        return
 
     def sample_episode(self) -> Trajectory:
-        trajectory = Trajectory()
-        state, _ = self.env.reset()  # WATCH OUT: the reset method returns different stuff for different environments
-        done = False
-        while not done:
+        trajectory = Trajectory(self.env.observation_space.shape, self.env.spec.max_episode_steps)
+        state, done = self.env.reset(), False
+        while not (done or trunc):
             action = self.choose_action(state)
             next_state, reward, done, trunc, _ = self.env.step(action)
-            trajectory.add(Transition(state, action, reward, next_state, done))
+            trajectory.add(state, action, reward, next_state, done)
             state = next_state
-
-
+        return trajectory
 
     def choose_action(self, state: torch.Tensor) -> int:
         return self.env.action_space.sample() if torch.rand(1) < self.epsilon else torch.argmax(self.model(state)).item()
-
-
-
-
-
-
-
-
-
-
 
     def anneal_epsilon(self) -> None:
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)

@@ -4,104 +4,36 @@
 Data structures for storing transitions.
 """
 
-from __future__ import annotations
-from typing import Iterable, Optional
+import torch
 
-from torch import Tensor, stack
-
-
-class Transition:
-    """ A transition is a tuple of (state, action, reward, next_state, done). """
-
-    def __init__(self, s: Tensor, a: int, r: float, s_: Tensor, d: bool) -> None:
-        """ Initializes a singular transition. """
-        self.a = a
-        self.s = s
-        self.r = r
-        self.s_ = s_
-        self.d = d
-        return
 
 class Trajectory:
     """ A set of transitions sampled from one episode. """
 
-    def __init__(self, transitions: Optional[Iterable[Transition]] = None) -> None:
-        """
-        Initializes a trajectory.
-        If no transitions are provided, an empty list is used instead.
-        """
-        self.transitions = list(transitions) if transitions is not None else []
-        return
-    
-    def add(self, transition: Transition) -> None:
-        """ Adds a transition to the batch. """
-        self.transitions.append(transition)
-        return
+    def __init__(self, state_shape: tuple, max_length: int) -> None:
+        """ Initializes a trajectory. """
+        self.S = torch.empty((max_length, *state_shape), dtype=torch.float32)
+        self.A = torch.empty((max_length, 1), dtype=torch.int8)
+        self.R = torch.empty((max_length, 1), dtype=torch.float32)
+        self.S_ = torch.empty((max_length, *state_shape), dtype=torch.float32)
+        self.D = torch.empty((max_length, 1), dtype=torch.bool)
+        self.l = 0
 
-    def unpack(self) -> tuple[Tensor]:
-        """
-        Unpacks the batch into all their respective tensors.
+    def add(self, s: torch.Tensor, a: int, r: float, s_: torch.Tensor, d: bool) -> None:
+        """ Adds a transition to the trajectory. """
+        if self.l == len(self):
+            raise RuntimeError('Trajectory is full.')
+        self.S[self.l] = s
+        self.A[self.l] = torch.tensor(a, dtype=torch.int8)
+        self.R[self.l] = torch.tensor(r, dtype=torch.float32)
+        self.S_[self.l] = s_
+        self.D[self.l] = torch.tensor(d, dtype=torch.bool)
+        self.l += 1
 
-        Returns:
-            - states
-            - actions
-            - rewards
-            - next_states
-            - done flags
-        """
-        return (
-            stack([t.s for t in self.transitions]),
-            Tensor([t.a for t in self.transitions]).long(),
-            Tensor([t.r for t in self.transitions]),
-            stack([t.s_ for t in self.transitions]),
-            Tensor([t.d for t in self.transitions]),
-        )
-    
-    @property
-    def S(self) -> Tensor:
-        """ States tensor """
-        return stack([t.s for t in self.transitions])
-    
-    @property
-    def A(self) -> Tensor:
-        """ Actions tensor """
-        return Tensor([t.a for t in self.transitions]).long()
-    
-    @property
-    def R(self) -> Tensor:
-        """ Rewards tensor """
-        return Tensor([t.r for t in self.transitions])
-    
-    @property
-    def S_(self) -> Tensor:
-        """ Next states tensor """
-        return stack([t.s_ for t in self.transitions])
-    
-    @property
-    def D(self) -> Tensor:
-        """ Done flags tensor """
-        return Tensor([t.d for t in self.transitions])
-
-    @property
-    def totalReward(self) -> float:
-        """ Returns the total reward of the batch. """
-        return self.R.sum().item()
+    def unpack(self) -> tuple:
+        """ Returns the trajectory as a tuple of tensors. """
+        return self.S[:self.l], self.A[:self.l], self.R[:self.l], self.S_[:self.l], self.D[:self.l]
 
     def __len__(self) -> int:
-        return len(self.transitions)
-    
-    def __getitem__(self, index: int | slice) -> Transition | Trajectory:
-        if isinstance(index, slice):
-            return Trajectory(self.transitions[index])
-        return self.transitions[index]
-    
-    def __iter__(self) -> Iterable[Transition]:
-        return iter(self.transitions)
-    
-    def __add__(self, other: Transition | Trajectory) -> Trajectory:
-        if isinstance(other, Transition):
-            return Trajectory(self.transitions + [other])
-        return Trajectory(self.transitions + other.transitions)
-    
-    def __delitem__(self, index: int | slice) -> None:
-        del self.transitions[index]
+        """ Returns the number of transitions in the trajectory. """
+        return self.l
