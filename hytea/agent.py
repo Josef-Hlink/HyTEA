@@ -2,11 +2,12 @@
 
 from hytea.transitions import Trajectory
 from hytea.model import Model
+from hytea.environment import Environment
 
 import torch
-from gym import Env
 from torch.nn import functional as F
-from tqdm.auto import tqdm
+from torch.optim import Optimizer
+
 
 class DQNAgent:
 
@@ -17,7 +18,10 @@ class DQNAgent:
         
         self.device = device
         self.model = model.to(self.device)
-        self.optimizer = {'adam': torch.optim.Adam, 'sgd': torch.optim.SGD}[optimizer](self.model.parameters(), lr=lr)
+        self.optimizer: Optimizer = dict(
+            adam = torch.optim.Adam,
+            sgd = torch.optim.SGD
+        )[optimizer](self.model.parameters(), lr=lr)
         self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=1, gamma=lr_decay)
         
         self.gamma = gamma
@@ -26,28 +30,55 @@ class DQNAgent:
         self.epsilon_decay = epsilon_decay
         self.epsilon_min = epsilon_min
         
-        # tqdm progress bar
-        self.pbar = tqdm()
-        self.pbar.set_description('Training')
         return
     
-    def train(self, num_episodes: int, env: Env) -> None:
+    def train(self, num_episodes: int, env: Environment) -> float:
+        """ Train the agent for a number of episodes. 
+        
+        ### Args:
+        `int` num_episodes: number of episodes to train for.
+        `Environment` env: environment to train on.
+
+        ### Returns:
+        `float`: average reward per episode.
+        """
         self.env = env
-        # use tqdm progress bar
-        for _ in self.pbar(range(num_episodes)):
+        total_reward = 0
+        for _ in range(num_episodes):
             trajectory = self._sample_episode()
-            pbar.desc = f'Training (episode: {trajectory.l}, reward: {trajectory.R.sum().item()})'
+            total_reward += trajectory.total_reward
             self._learn(trajectory)
             self._anneal_epsilon()
-            self.scheduler.step()
-        return
+        return total_reward / num_episodes
+    
+    def test(self, num_episodes: int) -> float:
+        """ Test the agent for a number of episodes.
+
+        ### Args:
+        `int` num_episodes: number of episodes to test for.
+
+        ### Returns:
+        `float`: average reward per episode.
+        """
+        assert self.env is not None, 'Agent has not been trained yet.'
+        total_reward = 0
+        for _ in range(num_episodes):
+            trajectory = self._sample_episode()
+            total_reward += trajectory.total_reward
+        return total_reward / num_episodes
 
     def _sample_episode(self) -> Trajectory:
+        """ Samples an episode from the environment.
+        
+        ### Returns:
+        `Trajectory`: the sampled episode.
+        """
         trajectory = Trajectory(self.env.observation_space.shape, self.env.spec.max_episode_steps)
         state, done = self.env.reset(), False
-        while not (done or trunc):
+        while not done:
             action = self._choose_action(state)
             next_state, reward, done, trunc, _ = self.env.step(action)
+            done = done or trunc
             trajectory.add(state, action, reward, next_state, done)
             state = next_state
         return trajectory
@@ -60,11 +91,15 @@ class DQNAgent:
         return
     
     def _learn(self, trajectory: Trajectory) -> None:
-        states, actions, rewards, next_states, dones = trajectory.get_tensors()
-        q_values = self.model(states).gather(1, actions)
-        next_q_values = self.model(next_states).max(1)[0].unsqueeze(1).detach()
-        expected_q_values = rewards + self.gamma * next_q_values * (1 - dones)
-        loss = F.mse_loss(q_values, expected_q_values)
+        """ Learns from a trajectory.
+
+        ### Args:
+        `Trajectory` trajectory: trajectory to learn from.
+        """
+        S, A, R, S_, D = trajectory.unpack()
+        Q = self.model(S).gather(1, A)
+        Q_ = self.model(S_).max(1, keepdim=True).values
+        loss = F.mse_loss(Q, R + self.gamma * Q_ * ~D)
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()

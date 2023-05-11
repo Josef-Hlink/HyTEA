@@ -11,7 +11,7 @@ setup(
     entry_points = {
         'console_scripts': [
             'hytea = hytea.cli:main',
-            'test = hytea.main:main'
+            'hytea2 = hytea.main:main'
         ],
     },
     install_requires = [
@@ -22,7 +22,7 @@ setup(
         'jupyter',
         'ipykernel',
         'seaborn',
-        'gym',
+        'gymnasium',
         'torch',
         'wandb',
         'tqdm'
