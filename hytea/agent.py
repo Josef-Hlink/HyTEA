@@ -7,7 +7,8 @@ from hytea.environment import Environment
 import torch
 from torch.nn import functional as F
 from torch.optim import Optimizer
-
+from torch.distributions import Categorical
+import numpy as np
 
 class DQNAgent:
 
@@ -106,3 +107,127 @@ class DQNAgent:
         self.scheduler.step()
         return
     
+class ActorCriticAgent:
+    
+    def __init__(self,
+        model: Model, lr: float, lr_decay: float, gamma: float, epsilon: float, epsilon_decay: float, epsilon_min: float,
+        optimizer: str, device: torch.device
+    ) -> None:
+        
+        self.device = device
+        self.model = model.to(self.device)
+        self.optimizer = {'adam': torch.optim.Adam, 'sgd': torch.optim.SGD}[optimizer](self.model.parameters(), lr=lr)
+        self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=40, gamma=lr_decay)
+        
+        self.gamma = gamma
+
+        self.epsilon = epsilon
+        self.epsilon_decay = epsilon_decay
+        self.epsilon_min = epsilon_min
+        
+        return
+
+    def train(self, num_episodes: int, env: Environment) -> None:
+        """ Train the agent for a number of episodes.
+        
+        ### Args:
+        `int` num_episodes: number of episodes to train for.
+        `Environment` env: environment to train on.
+        """
+        self.env = env
+        total_reward = 0
+        for _ in range(num_episodes):
+            trajectory = self._sample_episode()
+            total_reward += trajectory.total_reward
+            self._learn(trajectory)
+            self._anneal_epsilon()
+        return total_reward / num_episodes
+
+    def test(self, num_episodes: int) -> float:
+        """ Test the agent for a number of episodes.
+
+        ### Args:
+        `int` num_episodes: number of episodes to test for.
+
+        ### Returns:
+        `float`: average reward per episode.
+        """
+        assert self.env is not None, 'Agent has not been trained yet.'
+        total_reward = 0
+        for _ in range(num_episodes):
+            trajectory = self._sample_episode()
+            total_reward += trajectory.total_reward
+        return total_reward / num_episodes
+    
+    def _sample_episode(self) -> Trajectory:
+        """ Samples an episode from the environment.
+        
+        ### Returns:
+        `Trajectory`: the sampled episode.
+        """
+        trajectory = Trajectory(self.env.observation_space.shape, self.env.spec.max_episode_steps)
+        state, done = self.env.reset(), False
+        while not done:
+            # instead of choosing an action randomly or with argmax we need to call the model
+            action, log_prob, state_value, entropy = self._select_action(state)
+            # print(log_prob)
+            # print(state_value)
+            # print(entropy)
+            next_state, reward, done, trunc, _ = self.env.step(action)
+            done = done or trunc
+            trajectory.add(state, log_prob, reward, next_state, done, state_value, entropy)
+            state = next_state
+        return trajectory
+
+    def _select_action(self, state: torch.Tensor) -> int:
+        probs, state_value = self.model(state)
+        m = Categorical(probs)
+        action = m.sample()
+        
+        return action.item(), m.log_prob(action), state_value, m.entropy().item()
+    
+    def _choose_action(self, state: torch.Tensor) -> int:        
+        return self.env.action_space.sample() if torch.rand(1) < self.epsilon else torch.argmax(self.model(state)[0]).item()
+    
+    def _anneal_epsilon(self) -> None:
+        self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
+        return
+    
+    def _learn(self, trajectory: Trajectory) -> None:
+        """ Learns from a trajectory.
+        
+        ### Args:
+        `Trajectory` trajectory: trajectory to learn from.
+        """
+        S, A, R, S_, D, V, E = trajectory.unpack()
+        
+        R_ = 0
+        returns = []
+        for i in reversed(range(len(R))):
+            R_ = R[i] + self.gamma * R_ * ~D[i]
+            returns.insert(0, R_)
+        returns = torch.tensor(returns).to(self.device)        
+
+        # normalize returns
+        eps = np.finfo(np.float32).eps.item()
+        returns = (returns - returns.mean()) / (returns.std() + eps)
+        
+        policy_loss = []
+        value_loss = []
+        for log_prob, value, R, entropy in zip(A, V, returns, E):
+            # basleine
+            # advantage = R - value.item()
+            advantage = R
+            # print(entropy)
+            # print(log_prob)
+            log_prob = log_prob+ entropy*0.01 # entropy regularization
+            
+            policy_loss.append(-log_prob * advantage)
+            value_loss.append(F.mse_loss(value, torch.tensor([R]).to(self.device)))
+            
+        self.optimizer.zero_grad()
+        loss = torch.stack(policy_loss).sum() + torch.stack(value_loss).sum()
+        loss.backward()
+        self.optimizer.step()
+        self.scheduler.step()
+        return
