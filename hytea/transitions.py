@@ -10,13 +10,14 @@ import torch
 class Trajectory:
     """ A set of transitions sampled from one episode. """
 
-    def __init__(self, state_shape: tuple, max_length: int) -> None:
+    def __init__(self, state_shape: tuple, max_length: int, device) -> None:
         """ Initializes a trajectory. """
-        self.S = torch.empty((max_length, *state_shape), dtype=torch.float32)
-        self.A = torch.empty((max_length, 1))
-        self.R = torch.empty((max_length, 1), dtype=torch.float32)
-        self.S_ = torch.empty((max_length, *state_shape), dtype=torch.float32)
-        self.D = torch.empty((max_length, 1), dtype=torch.bool)
+        self.device = device
+        self.S = torch.empty((max_length, *state_shape), dtype=torch.float32, device=self.device)
+        self.A = torch.empty((max_length, 1), device=self.device)
+        self.R = torch.empty((max_length, 1), dtype=torch.float32, device=self.device)
+        self.S_ = torch.empty((max_length, *state_shape), dtype=torch.float32, device=self.device)
+        self.D = torch.empty((max_length, 1), dtype=torch.bool, device=self.device)
         self.V = torch.empty((max_length, 1))
         self.E = torch.empty((max_length, 1), dtype=torch.float32)
         self.ml = max_length
