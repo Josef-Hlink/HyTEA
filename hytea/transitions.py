@@ -10,13 +10,14 @@ import torch
 class Trajectory:
     """ A set of transitions sampled from one episode. """
 
-    def __init__(self, state_shape: tuple, max_length: int) -> None:
+    def __init__(self, state_shape: tuple, max_length: int, device) -> None:
         """ Initializes a trajectory. """
-        self.S = torch.empty((max_length, *state_shape), dtype=torch.float32)
-        self.A = torch.empty((max_length, 1), dtype=torch.int64)
-        self.R = torch.empty((max_length, 1), dtype=torch.float32)
-        self.S_ = torch.empty((max_length, *state_shape), dtype=torch.float32)
-        self.D = torch.empty((max_length, 1), dtype=torch.bool)
+        self.device = device
+        self.S = torch.empty((max_length, *state_shape), dtype=torch.float32, device=self.device)
+        self.A = torch.empty((max_length, 1), dtype=torch.int64, device=self.device)
+        self.R = torch.empty((max_length, 1), dtype=torch.float32, device=self.device)
+        self.S_ = torch.empty((max_length, *state_shape), dtype=torch.float32, device=self.device)
+        self.D = torch.empty((max_length, 1), dtype=torch.bool, device=self.device)
         self.ml = max_length
         self.l = 0
 
@@ -25,10 +26,10 @@ class Trajectory:
         if self.full:
             raise RuntimeError('Trajectory is full.')
         self.S[self.l] = s
-        self.A[self.l] = torch.tensor(a, dtype=torch.int8)
-        self.R[self.l] = torch.tensor(r, dtype=torch.float32)
+        self.A[self.l] = torch.tensor(a, dtype=torch.int8, device=self.device)
+        self.R[self.l] = torch.tensor(r, dtype=torch.float32, device=self.device)
         self.S_[self.l] = s_
-        self.D[self.l] = torch.tensor(d, dtype=torch.bool)
+        self.D[self.l] = torch.tensor(d, dtype=torch.bool, device=self.device)
         self.l += 1
 
     @property

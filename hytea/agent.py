@@ -73,7 +73,7 @@ class DQNAgent:
         ### Returns:
         `Trajectory`: the sampled episode.
         """
-        trajectory = Trajectory(self.env.observation_space.shape, self.env.spec.max_episode_steps)
+        trajectory = Trajectory(self.env.observation_space.shape, self.env.spec.max_episode_steps, self.device)
         state, done = self.env.reset(), False
         while not done:
             action = self._choose_action(state)
