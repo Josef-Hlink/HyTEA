@@ -63,14 +63,12 @@ class ActorCriticModel(torch.nn.Module):
         if dropout_rate > 0:
             self.do1 = torch.nn.Dropout(dropout_rate)
         
-        for i in range(num_layers):
-            if i==0:
-                setattr(self, f'fc{i+2}', torch.nn.Linear(hidden_size, hidden_size*2))
-            else:
-                setattr(self, f'fc{i+2}', torch.nn.Linear(hidden_size*2, hidden_size*2))
-            # setattr(self, f'fc{i+2}', torch.nn.Linear(hidden_size, hidden_size))
+        self.fc2 = torch.nn.Linear(hidden_size, hidden_size*2)
+        
+        for i in range(num_layers-1):
+            setattr(self, f'fc{i+3}', torch.nn.Linear(hidden_size*2, hidden_size*2))
             if dropout_rate > 0:
-                setattr(self, f'do{i+2}', torch.nn.Dropout(dropout_rate))
+                setattr(self, f'do{i+3}', torch.nn.Dropout(dropout_rate))
         
         # actor head
         setattr(self, f'fc{num_layers+2}', torch.nn.Linear(hidden_size*2, output_size))
@@ -80,7 +78,7 @@ class ActorCriticModel(torch.nn.Module):
         
         return
     
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         x = self.fc1(x)
         if self.dropout_rate > 0:
             x = self.do1(x)
@@ -98,3 +96,7 @@ class ActorCriticModel(torch.nn.Module):
         critic_output = getattr(self, f'fc{self.num_layers+3}')(x)
         
         return self.output_activation(actor_output, dim=-1), critic_output
+    
+    def __call__(self, *args, **kwargs) -> tuple[torch.Tensor, torch.Tensor]:
+        """ For more accurate type hinting. """
+        return super(ActorCriticModel, self).__call__(*args, **kwargs)

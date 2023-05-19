@@ -4,8 +4,8 @@ import torch
 
 class Environment:
 
-    def __init__(self, gym_env: str, device: torch.device):
-        self.gym_env: gym.Env = gym.make(gym_env)
+    def __init__(self, env_name: str, device: torch.device):
+        self.gym_env: gym.Env = gym.make(env_name)
         self.device = device
     
     def reset(self) -> torch.Tensor:
