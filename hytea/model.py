@@ -6,7 +6,7 @@ class Model(torch.nn.Module):
 
     def __init__(self,
         input_size: int, output_size: int, hidden_size: int,
-        num_layers: int, dropout_rate: float, hidden_activation: str, output_activation: str
+        hidden_activation: str, output_activation: str, num_layers: int, dropout_rate: float
     ) -> None:
         super(Model, self).__init__()
         self.input_size = input_size
@@ -47,7 +47,7 @@ class ActorCriticModel(torch.nn.Module):
     
     def __init__(self, 
             input_size: int, output_size: int, hidden_size: int, 
-            num_layers: int, dropout_rate: float, hidden_activation: str, output_activation: str
+            hidden_activation: str, output_activation: str, num_layers: int, dropout_rate: float
     ) -> None:
         super(ActorCriticModel, self).__init__()
         self.input_size = input_size
@@ -59,11 +59,11 @@ class ActorCriticModel(torch.nn.Module):
         self.output_activation = {'relu': F.relu, 'tanh': F.tanh, 'sigmoid': F.sigmoid, 'softmax': F.softmax}[output_activation]
         
         self.fc1 = torch.nn.Linear(input_size, hidden_size)
+        self.fc2 = torch.nn.Linear(hidden_size, hidden_size*2)
         
         if dropout_rate > 0:
             self.do1 = torch.nn.Dropout(dropout_rate)
-        
-        self.fc2 = torch.nn.Linear(hidden_size, hidden_size*2)
+            self.do2 = torch.nn.Dropout(dropout_rate)
         
         for i in range(num_layers-1):
             setattr(self, f'fc{i+3}', torch.nn.Linear(hidden_size*2, hidden_size*2))

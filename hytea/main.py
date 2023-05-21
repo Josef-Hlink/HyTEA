@@ -1,38 +1,80 @@
 from time import perf_counter
 
-
-from hytea.agent import ActorCriticAgent
-from hytea.model import Model, ActorCriticModel
-from hytea.environment import Environment
+from hytea import Environment, ActorCriticModel, ActorCriticAgent
+from hytea.utils import DotDict
 import torch
 
 
-def main(caller: str = 'cli'):
-    print('Hello, world!')
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+def main(config: DotDict, caller: str = 'cli') -> None | list:
+    """ Main function for the hytea package. 
+    
+    ### Args:
+    `DotDict` config: configuration dictionary.
+    `str` caller: caller of the function. Either 'cli' or 'jupyter'.
+
+    ### Returns:
+    `None` if caller is 'cli', `list` of histories if caller is 'jupyter'.
+    """
+    if caller == 'cli':
+        histories = []
+    for _ in range(config.exp.num_runs):
+        history = run(config, caller)
+        if caller == 'cli':
+            print(f'avg. reward: {sum(history)/len(history):.2f}')
+            histories.append(history)
+    return histories if caller == 'jupyter' else None
+
+
+def run(config: DotDict, caller: str = 'cli') -> None | list:
+    """ Run the agent for a number of episodes.
+
+    ### Args:
+    `DotDict` config: configuration dictionary.
+    `str` caller: caller of the function. Either 'cli' or 'jupyter'.
+
+    ### Returns:
+    `None` if caller is 'cli', `list` of histories if caller is 'jupyter'.
+    """
+    
     device = torch.device('cpu')
 
     env = Environment('LunarLander-v2', device=device)
 
-    model = ActorCriticModel(input_size=env.observation_space.shape[0], output_size=env.action_space.n, hidden_size=64, num_layers=2, dropout_rate=0, hidden_activation='relu', output_activation='softmax')
+    model = ActorCriticModel(
+        input_size = env.observation_space.shape[0],
+        output_size = env.action_space.n,
+        hidden_size = config.network.hidden_size,
+        hidden_activation = config.network.hidden_activation,
+        output_activation = config.network.output_activation,
+        num_layers = config.network.num_layers,
+        dropout_rate = config.network.dropout_rate,
+    ).to(device)
 
-    histories = []
+    optimizer: torch.optim.Optimizer = {
+        'adam': torch.optim.Adam,
+        'sgd': torch.optim.SGD,
+    }[config.optimizer.type](model.parameters(), lr=config.optimizer.lr)
 
-    for rep in range(3):
-        agent = ActorCriticAgent(model=model, lr=1e-3, lr_decay=0.99, gamma=0.9, optimizer='adam', device=device)
-        print('-' * 80)
-        train_start = perf_counter()
-        train_reward, history = agent.train(num_episodes=5000, env=env)
-        histories.append(history)
-        print(f'Training time: {perf_counter() - train_start:.2f} seconds')
-        print(f'Average reward: {train_reward:.2f}')
-        test_start = perf_counter()
-        test_reward = agent.test(num_episodes=100)
-        print(f'Evaluation time: {perf_counter() - test_start:.2f} seconds')
-        print(f'Average reward: {test_reward:.2f}')
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=config.optimizer.lr_decay)
 
-    if caller == 'jupyter':
-        return histories
+    agent = ActorCriticAgent(
+        model = model,
+        optimizer = optimizer,
+        scheduler = scheduler,
+        gamma = config.agent.gamma,
+        n_steps = config.agent.n_steps,
+        device = device
+    )
+
+    if caller == 'cli':
+        start = perf_counter()
+        history = agent.train(num_episodes=config.exp.num_episodes, env=env)
+        end = perf_counter()
+        print(f'Training took {end-start:.2f} seconds.')
+        return history
+    elif caller == 'jupyter':
+        return agent.train(num_episodes=config.exp.num_episodes, env=env)
+
 
 if __name__ == '__main__':
     main()

@@ -7,30 +7,27 @@ from hytea.environment import Environment
 import torch
 from torch.nn import functional as F
 from torch.optim import Optimizer
+from torch.optim.lr_scheduler import StepLR
 from torch.distributions import Categorical
-import numpy as np
 import tqdm
 
 class ActorCriticAgent:
 
     def __init__(self,
-        model: ActorCriticModel, lr: float, lr_decay: float, gamma: float, optimizer: str, device: torch.device
+        model: ActorCriticModel, optimizer: Optimizer, scheduler: StepLR, gamma: float, n_steps: int, device: torch.device
     ) -> None:
         
         self.device = device
         self.model = model.to(self.device)
-        self.optimizer: Optimizer = dict(
-            adam = torch.optim.Adam,
-            sgd = torch.optim.SGD
-        )[optimizer](self.model.parameters(), lr=lr)
-        self.scheduler = torch.optim.lr_scheduler.StepLR(self.optimizer, step_size=1, gamma=lr_decay)
+        self.optimizer = optimizer
+        self.scheduler = scheduler
         
         self.gamma = gamma
-        self.nSteps = 100  # bootstrap steps
+        self.n_steps = n_steps
 
         return
     
-    def train(self, num_episodes: int, env: Environment) -> float:
+    def train(self, num_episodes: int, env: Environment) -> list[float]:
         """ Train the agent for a number of episodes. 
         
         ### Args:
@@ -38,19 +35,17 @@ class ActorCriticAgent:
         `Environment` env: environment to train on.
 
         ### Returns:
-        `float`: average reward per episode.
+        `list[float]`: history of total reward per episode.
         """
         self.env = env
         self.discounts = torch.tensor([self.gamma**i for i in range(self.env.spec.max_episode_steps)]).to(self.device)
-        total_reward = 0
         history = []
 
         for _ in tqdm.tqdm(range(num_episodes)):
             trajectory = self._sample_episode()
-            total_reward += trajectory.total_reward
             history.append(trajectory.total_reward)
             self._learn(trajectory)
-        return total_reward / num_episodes, history
+        return history
     
     def test(self, num_episodes: int) -> float:
         """ Test the agent for a number of episodes.
@@ -112,7 +107,7 @@ class ActorCriticAgent:
         G = torch.zeros(len(R), device=self.device)
         for i in range(len(R)):
             # slice out the next nSteps transitions
-            slc: slice = slice(i, i + self.nSteps)
+            slc: slice = slice(i, i + self.n_steps)
             # substitute value of last state with bootstrap value
             _R = torch.cat((R[slc], V_[slc][-1] * (~D[slc][-1]).unsqueeze(-1)))
             # sum of discounted rewards
