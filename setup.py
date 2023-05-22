@@ -21,7 +21,7 @@ setup(
         'jupyter',
         'ipykernel',
         'seaborn',
-        'gymnasium',
+        'gymnasium[box2d]',
         'torch',
         'wandb',
         'tqdm'
