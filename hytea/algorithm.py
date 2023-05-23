@@ -6,7 +6,14 @@ This module contains the evolutionary algorithm class and its components.
 """
 
 import numpy as np
+from hytea.bitstring import BitStringDecoder
+from hytea.utils import DotDict
+from hytea.main import run
 
+def main(config: DotDict, caller: str = 'cli') -> None | list:
+    bs = BitStringDecoder(50, 'hytea/bitstring.yaml')
+    ea = EvolutionaryAlgorithm(50, bs, config)
+    ea.run()
 
 class EvolutionaryAlgorithm:
     """
@@ -22,14 +29,16 @@ class EvolutionaryAlgorithm:
     - 50 generations (or more if it turns out to be fast)
     """
 
-    def __init__(self, population_size: int, candidate_size: int) -> None:
+    def __init__(self, population_size: int, bitstring_decoder: BitStringDecoder, default_config: DotDict) -> None:
         self.population_size = population_size
-        self.candidate_size = candidate_size
+        self.candidate_size = bitstring_decoder.candidate_size
         self.mu_ = population_size // 5
         self.lambda_ = population_size - self.mu_
         self.pool_size = population_size // 4
         self.mutation_rate = 0.1
         self.generations = 50
+        self.bitstring_decoder = bitstring_decoder
+        self.default_config = default_config
     
     def run(self) -> None:
         """
@@ -57,9 +66,14 @@ class EvolutionaryAlgorithm:
     def evaluate_population(self) -> np.ndarray:
         """
         Evaluate the population by training and testing the bitstrings.
-        """
-
-        fitness_values = np.sum(self.population, axis=1)
+        """        
+        decoded_population = np.array([self.bitstring_decoder.decode(bitstring, self.default_config.to_dict()) for bitstring in self.population])
+ 
+        histories = np.array([run(config=DotDict.from_dict(decoded_config)) for decoded_config in decoded_population])
+        
+        # fitness values are the average reward per episode
+        fitness_values = np.mean(histories, axis=1)
+        
         return fitness_values
 
     def select(self, fitness_values: np.ndarray) -> np.ndarray:
@@ -125,8 +139,4 @@ class EvolutionaryAlgorithm:
         return best_candidate
 
 if __name__=="__main__":
-    ea = EvolutionaryAlgorithm(50, 18)
-    ea.run()
-
-                
-
+    main()

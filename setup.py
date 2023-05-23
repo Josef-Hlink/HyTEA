@@ -10,7 +10,8 @@ setup(
     packages = find_packages(),
     entry_points = {
         'console_scripts': [
-            'hytea = hytea.cli:cli'
+            'hytea = hytea.cli:cli',
+            'hytea-ea = hytea.cli:ea_cli',
         ],
     },
     install_requires = [

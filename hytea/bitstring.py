@@ -33,7 +33,7 @@ class BitStringDecoder():
         
         return config
     
-    def decode(self, bitstring: np.ndarray) -> np.ndarray:
+    def decode(self, bitstring: np.ndarray, defaults: dict = {}) -> dict:
         """
         decode a single bitstring into a dictionary.
         
@@ -53,4 +53,6 @@ class BitStringDecoder():
             else:
                 decoded[k] = v["values"][int("".join(bitstring[:b]), 2)]
             bitstring = bitstring[b:]
-        return decoded
+            
+        defaults.update(decoded)
+        return defaults

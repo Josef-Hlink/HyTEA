@@ -95,7 +95,7 @@ class ActorCriticModel(torch.nn.Module):
         # critic head
         critic_output = getattr(self, f'fc{self.num_layers+3}')(x)
         
-        return self.output_activation(actor_output, dim=-1), critic_output
+        return self.output_activation(actor_output), critic_output
     
     def __call__(self, *args, **kwargs) -> tuple[torch.Tensor, torch.Tensor]:
         """ For more accurate type hinting. """
