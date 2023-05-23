@@ -8,18 +8,20 @@ from hytea.utils import DotDict
 from hytea.fitness import FitnessFunction
 from hytea.bitstring import BitStringDecoder
 from hytea.algorithm import EvolutionaryAlgorithm
-
+from hytea.wblog import create_project_name
 
 def cli() -> None:
 
     args = parse_args()
+    args = DotDict.from_dict(vars(args))
+    args.project_name = create_project_name(args)
     
     with open(Path(__file__).resolve().parents[0] / 'config.yaml', 'r') as f:
         config = DotDict.from_dict(safe_load(f))
 
     bs = BitStringDecoder(config)
-    ff = FitnessFunction(bs, args.env_name, args.num_train_episodes, args.num_test_episodes, args.num_runs, args.debug)
-    ea = EvolutionaryAlgorithm(args.num_generations, args.population_size, ff)
+    ff = FitnessFunction(bs, args.env_name, args.num_train_episodes, args.num_test_episodes, args.num_runs, args, args.debug)
+    ea = EvolutionaryAlgorithm(args.num_generations, args.population_size, ff, args)
     ea.run()
 
     return
@@ -36,7 +38,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--train', dest='num_train_episodes', type=int, default=1000, help='The number of episodes to train the agent for.')
     parser.add_argument('--test', dest='num_test_episodes', type=int, default=100, help='The number of episodes to test the agent for.')
     parser.add_argument('--runs', dest='num_runs', type=int, default=3, help='The number of runs to average the reward over.')
-    parser.add_argument('--wt', dest='wandb_team', type=str, default='HyTEA', help='The name of the wandb team.')
+    parser.add_argument('--wt', dest='wandb_team', type=str, default='hytea', help='The name of the wandb team.')
     parser.add_argument('-W', dest='use_wandb', action='store_true', help='Use wandb for logging.')
     parser.add_argument('-D', dest='debug', action='store_true', help='Enable debug mode.')
     return parser.parse_args()

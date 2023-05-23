@@ -24,6 +24,7 @@ setup(
         'gymnasium[box2d]',
         'torch',
         'wandb',
-        'tqdm'
+        'tqdm',
+        'randomname'
     ],
 )

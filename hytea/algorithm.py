@@ -8,7 +8,8 @@ This module contains the evolutionary algorithm class and its components.
 from multiprocessing import Pool
 
 from hytea.fitness import FitnessFunction
-
+from hytea.wblog import create_group_name, create_job_type_name
+from hytea.utils import DotDict
 import numpy as np
 
 
@@ -29,7 +30,8 @@ class EvolutionaryAlgorithm:
     def __init__(self,
             num_generations: int,
             population_size: int,
-            fitness_function: FitnessFunction
+            fitness_function: FitnessFunction,
+            args: DotDict,
     ) -> None:
         """ Initialize the evolutionary algorithm.
 
@@ -50,6 +52,7 @@ class EvolutionaryAlgorithm:
 
         self.evaluate = fitness_function.evaluate
         self.candidate_size = fitness_function.decoder.get_candidate_size()
+        self.args = args
 
         return
     
@@ -58,7 +61,7 @@ class EvolutionaryAlgorithm:
         self.initialize_population()
 
         for i in range(self.num_generations):
-            fitness_values = self.evaluate_population()
+            fitness_values = self.evaluate_population(i+1)
             print(f'Generation {i}: {np.mean(fitness_values)}')
             print([round(f, 2) for f in fitness_values])
             selected_candidates = self.select(fitness_values)
@@ -75,11 +78,12 @@ class EvolutionaryAlgorithm:
         """
         self.population = np.random.randint(2, size=(self.population_size, self.candidate_size), dtype=np.uint8)
     
-    def evaluate_population(self) -> np.ndarray:
+    def evaluate_population(self, gen: int) -> np.ndarray:
         """ Evaluate the population by training and testing the bitstrings. """
+        group_name = create_group_name(self.args, gen)
         with Pool() as pool:
-            return np.array(pool.map(self.evaluate, self.population))
-
+            return np.array(pool.starmap(self.evaluate, [(candidate, group_name, create_job_type_name(candidate)) for candidate in self.population]))
+        
     def select(self, fitness_values: np.ndarray) -> np.ndarray:
         """
         Select the best candidates from the population using tournament selection.
