@@ -10,7 +10,7 @@ setup(
     packages = find_packages(),
     entry_points = {
         'console_scripts': [
-            'hytea = hytea.cli:main',
+            'hytea = hytea.cli:cli',
         ],
     },
     install_requires = [
@@ -21,8 +21,9 @@ setup(
         'jupyter',
         'ipykernel',
         'seaborn',
-        'gym',
+        'gymnasium[box2d]',
         'torch',
         'wandb',
+        'tqdm'
     ],
 )

@@ -1,0 +1,29 @@
+# Config file for bitstring
+
+agent:
+  gamma:
+    bits: 2
+    vals: [0.9, 0.99, 0.995, 0.999]
+  n_steps:
+    bits: 2
+    vals: [10, 25, 50, 100]
+network:
+  num_layers: 
+    bits: 2
+    vals: [1, 2, 3, 4]
+  dropout_rate: 
+    bits: 2
+    vals: [0.01, 0.1, 0.2, 0.3]
+  hidden_size:
+    bits: 2
+    vals: [32, 64, 128, 256]
+  hidden_activation:
+    bits: 1
+    vals: [relu, sigmoid]
+optimizer:
+  lr:
+    bits: 2
+    vals: [0.01, 0.001, 0.0001, 0.00001]
+  lr_decay:
+    bits: 2
+    vals: [1, 0.99, 0.9, 0.85]

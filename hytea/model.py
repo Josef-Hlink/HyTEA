@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+
+import torch
+import torch.nn.functional as F
+
+    
+class Model(torch.nn.Module):
+    
+    def __init__(self, 
+            input_size: int, output_size: int, hidden_size: int, 
+            hidden_activation: str, num_layers: int, dropout_rate: float
+    ) -> None:
+        super().__init__()
+        self.input_size = input_size
+        self.output_size = output_size
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.dropout_rate = dropout_rate
+        self.hidden_activation = eval(f'F.{hidden_activation}')
+        
+        self.fc1 = torch.nn.Linear(input_size, hidden_size)
+        self.fc2 = torch.nn.Linear(hidden_size, hidden_size*2)
+        
+        if dropout_rate > 0:
+            self.do1 = torch.nn.Dropout(dropout_rate)
+            self.do2 = torch.nn.Dropout(dropout_rate)
+        
+        for i in range(num_layers-1):
+            setattr(self, f'fc{i+3}', torch.nn.Linear(hidden_size*2, hidden_size*2))
+            if dropout_rate > 0:
+                setattr(self, f'do{i+3}', torch.nn.Dropout(dropout_rate))
+        
+        # actor head
+        setattr(self, f'fc{num_layers+2}', torch.nn.Linear(hidden_size*2, output_size))
+        
+        # critic head
+        setattr(self, f'fc{num_layers+3}', torch.nn.Linear(hidden_size*2, 1))
+        
+        return
+    
+    def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        x = self.fc1(x)
+        if self.dropout_rate > 0:
+            x = self.do1(x)
+        x = self.hidden_activation(x)
+        for i in range(self.num_layers):
+            x = getattr(self, f'fc{i+2}')(x)
+            if self.dropout_rate > 0:
+                x = getattr(self, f'do{i+2}')(x)
+            x = self.hidden_activation(x)
+        
+        # actor head
+        actor_output = getattr(self, f'fc{self.num_layers+2}')(x)
+        
+        # critic head
+        critic_output = getattr(self, f'fc{self.num_layers+3}')(x)
+        
+        return F.softmax(actor_output, dim=-1), critic_output
+    
+    def __call__(self, *args, **kwargs) -> tuple[torch.Tensor, torch.Tensor]:
+        """ For more accurate type hinting. """
+        return super().__call__(*args, **kwargs)
