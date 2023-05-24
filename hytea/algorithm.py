@@ -23,23 +23,38 @@ class EvolutionaryAlgorithm:
     - 50 generations (or more if it turns out to be fast)
     """
 
-    def __init__(self, population_size: int, candidate_size: int, fitness_function: FitnessFunction) -> None:
-        self.evaluate = fitness_function.evaluate
+    def __init__(self,
+            num_generations: int,
+            population_size: int,
+            fitness_function: FitnessFunction
+    ) -> None:
+        """ Initialize the evolutionary algorithm.
+
+        ### Args:
+        `int` num_generations: The number of generations to run the algorithm for.
+        `int` population_size: The size of the population.
+        `FitnessFunction` fitness_function: The fitness function to evaluate the candidates with.
+            This will be used to evaluate the population, and to get the size of a candidate bitstring.
+        """
+
+        self.num_generations = num_generations
         self.population_size = population_size
-        self.candidate_size = candidate_size
+        
         self.mu_ = population_size // 5
         self.lambda_ = population_size - self.mu_
         self.pool_size = population_size // 4
         self.mutation_rate = 0.1
-        self.generations = 50
+
+        self.evaluate = fitness_function.evaluate
+        self.candidate_size = fitness_function.decoder.get_candidate_size()
+
+        return
     
     def run(self) -> None:
-        """
-        Run the evolutionary algorithm.
-        """
+        """ Main loop of the evolutionary algorithm. """
         self.initialize_population()
 
-        for i in range(self.generations):
+        for i in range(self.num_generations):
             fitness_values = self.evaluate_population()
             print(f"Generation {i}: {np.mean(fitness_values)}")
             selected_candidates = self.select(fitness_values)

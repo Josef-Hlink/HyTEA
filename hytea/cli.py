@@ -19,7 +19,7 @@ def cli() -> None:
 
     bs = BitStringDecoder(config)
     ff = FitnessFunction(bs)
-    ea = EvolutionaryAlgorithm(50, bs.get_candidate_size(), ff)
+    ea = EvolutionaryAlgorithm(args.num_generations, args.population_size, ff)
     ea.run()
 
     return
