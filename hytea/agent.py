@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from hytea.transitions import Trajectory
-from hytea.model import ActorCriticModel
+from hytea.model import Model
 from hytea.environment import Environment
 
 import torch
@@ -9,12 +9,13 @@ from torch.nn import functional as F
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import StepLR
 from torch.distributions import Categorical
-import tqdm
 
-class ActorCriticAgent:
+
+class Agent:
+    """ Agent that learns to play an environment using the actor-critic algorithm. """
 
     def __init__(self,
-        model: ActorCriticModel, optimizer: Optimizer, scheduler: StepLR, gamma: float, n_steps: int, device: torch.device
+        model: Model, optimizer: Optimizer, scheduler: StepLR, gamma: float, n_steps: int, device: torch.device
     ) -> None:
         
         self.device = device
@@ -41,7 +42,7 @@ class ActorCriticAgent:
         self.discounts = torch.tensor([self.gamma**i for i in range(self.env.spec.max_episode_steps)]).to(self.device)
         history = []
 
-        for _ in tqdm.tqdm(range(num_episodes)):
+        for _ in range(num_episodes):
             trajectory = self._sample_episode()
             history.append(trajectory.total_reward)
             self._learn(trajectory)
@@ -111,7 +112,6 @@ class ActorCriticAgent:
             # substitute value of last state with bootstrap value
             _R = torch.cat((R[slc], V_[slc][-1] * (~D[slc][-1]).unsqueeze(-1)))
             # sum of discounted rewards
-            # print(_R)
             G[i] = sum(self._discount(_R))
 
         # actor gradient

@@ -5,43 +5,24 @@ from pathlib import Path
 from yaml import safe_load
 
 from hytea.utils import DotDict
-from hytea.main import main
-from hytea.algorithm import main as ea_main
+from hytea.fitness import FitnessFunction
+from hytea.bitstring import BitStringDecoder
+from hytea.algorithm import EvolutionaryAlgorithm
 
 
 def cli() -> None:
-    parser = argparse.ArgumentParser(
-        description = 'Hyperparameter Tuning using Evolutionary Algorithms',
-        formatter_class = argparse.ArgumentDefaultsHelpFormatter
-    )
-    parser.add_argument('config', type=str, help='Path to the configuration file.')
-
-    args = parser.parse_args()
-
-    if not Path(args.config).exists():
-        raise FileNotFoundError(f'Configuration file {args.config} does not exist.')
-
-    with open(args.config, 'r') as f:
-        config = DotDict.from_dict(safe_load(f))
-
-    main(config=config, caller='cli')
     
-def ea_cli() -> None:
-    parser = argparse.ArgumentParser(
-        description = 'Hyperparameter Tuning using Evolutionary Algorithms',
-        formatter_class = argparse.ArgumentDefaultsHelpFormatter
-    )
-    parser.add_argument('config', type=str, help='Path to the configuration file.')
-
-    args = parser.parse_args()
-
-    if not Path(args.config).exists():
-        raise FileNotFoundError(f'Configuration file {args.config} does not exist.')
-
-    with open(args.config, 'r') as f:
+    config_path = Path(__file__).resolve().parents[0] / 'config.yaml'
+    with open(config_path, 'r') as f:
         config = DotDict.from_dict(safe_load(f))
 
-    ea_main(config=config, caller='cli')
+    bs = BitStringDecoder(config)
+    ff = FitnessFunction(bs)
+    ea = EvolutionaryAlgorithm(50, bs.get_candidate_size(), ff)
+    ea.run()
+
+    return
+
 
 if __name__ == '__main__':
     cli()

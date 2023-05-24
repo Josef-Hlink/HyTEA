@@ -44,7 +44,7 @@ class DotDict(dict):
 
     def __str__(self):
         """ String representation of the (nested) DotDict. """
-        text = f'DOTDICT({self.__class__.__name__})\n'
+        text = 'DOTDICT\n'
         def _walk(dotdct, indent):
             nonlocal text
             for k, v in dotdct.items():

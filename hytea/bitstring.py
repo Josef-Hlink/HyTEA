@@ -4,10 +4,8 @@
 Encoder and decoder for the bitstrings.
 """
 
+from hytea.utils import DotDict
 import numpy as np
-from pathlib import Path
-
-from yaml import safe_load
 
 
 class BitStringDecoder():
@@ -15,44 +13,28 @@ class BitStringDecoder():
     Encoder for the bitstrings.	
     """
     
-    def __init__(self, population_size: int, config_path: str) -> None:
-        self.population_size = population_size
-        self.bitstring_config = self._load_config(config_path)
-        self.candidate_size = np.sum([v['bits'] for v in self.bitstring_config.values()])
+    def __init__(self, config: DotDict) -> None:
+        self.blueprint = config
         return
     
-    def _load_config(self, config_path: str) -> dict:
-        """
-        Load the bitstring config from yaml.
-        """
-        if not Path(config_path).exists():
-            raise FileNotFoundError(f'BitString Configuration file {config_path} does not exist.')
-
-        with open(config_path, 'r') as f:
-            config = safe_load(f)
-        
-        return config
+    def get_candidate_size(self) -> int:
+        """ Calculates the size of the candidate bitstring. """
+        return sum([v.bits for scope in self.blueprint.keys() for v in self.blueprint[scope].values()])
     
-    def decode(self, bitstring: np.ndarray, defaults: dict = {}) -> dict:
-        """
-        decode a single bitstring into a dictionary.
+    def decode(self, bitstring: np.ndarray) -> DotDict:
+        """ Decodes a bitstring into a configuration.
         
-        Arguments:
-        - bitstring: The bitstring to decode.
+        ### Args:
+        `np.ndarray` bitstring: The bitstring to decode.
         """
-        decoded = {}
-        bitstring = [str(b) for b in bitstring]
-        bitstring = "".join(bitstring)
-        
-        for k,v in self.bitstring_config.items():
-            b = v['bits']
-            if "key" in v:
-                if v["key"] not in decoded:
-                    decoded[v["key"]] = {}
-                decoded[v["key"]][k] = v["values"][int("".join(bitstring[:b]), 2)]
-            else:
-                decoded[k] = v["values"][int("".join(bitstring[:b]), 2)]
-            bitstring = bitstring[b:]
-            
-        defaults.update(decoded)
-        return defaults
+        bitstring: str = ''.join([str(b) for b in bitstring])
+        config = DotDict(agent = DotDict(), network = DotDict(), optimizer = DotDict())
+
+        for scope in config.keys():
+            for k, v in self.blueprint[scope].items():
+                b: int = v.bits
+                i: int = int(bitstring[:b], 2)
+                config[scope][k] = v.vals[i]
+                bitstring = bitstring[b:]
+
+        return config

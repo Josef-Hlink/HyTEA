@@ -1,3 +1,3 @@
-from .agent import ActorCriticAgent
-from .model import ActorCriticModel
+from .agent import Agent
+from .model import Model
 from .environment import Environment
