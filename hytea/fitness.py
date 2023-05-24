@@ -30,7 +30,7 @@ class FitnessFunction:
         
         device = torch.device('cpu')
 
-        def _evaluate(num_episodes: int) -> float:
+        def _evaluate(num_train_episodes: int, num_test_episodes: int) -> float:
             """ Helper (one run) """
             env = Environment('LunarLander-v2', device=device)
 
@@ -43,7 +43,7 @@ class FitnessFunction:
                 dropout_rate = config.network.dropout_rate,
             ).to(device)
 
-            optimizer: torch.optim.Adam(model.parameters(), lr=config.optimizer.lr)
+            optimizer = torch.optim.Adam(model.parameters(), lr=config.optimizer.lr)
             scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=config.optimizer.lr_decay)
 
             agent = Agent(
