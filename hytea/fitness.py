@@ -9,8 +9,28 @@ import numpy as np
 
 class FitnessFunction:
 
-    def __init__(self, decoder: BitStringDecoder) -> None:
+    def __init__(self,
+        decoder: BitStringDecoder,
+        env_name: str,
+        num_train_episodes: int,
+        num_test_episodes: int,
+        num_runs: int,
+    ) -> None:
+        """ Fitness function for the bitstrings.
+        
+        ### Args:
+        `BitStringDecoder` decoder: The decoder to use.
+        `str` env_name: The name of the environment to use.
+        `int` num_train_episodes: The number of episodes to train for.
+        `int` num_test_episodes: The number of episodes to test for.
+        `int` num_runs: The number of individual runs to average over.
+        """
         self.decoder = decoder
+        self.env_name = env_name
+        self.num_train_episodes = num_train_episodes
+        self.num_test_episodes = num_test_episodes
+        self.num_runs = num_runs
+        return
 
     def evaluate(self, bitstring: np.ndarray) -> float:
         """ Run the agent for a number of episodes.
@@ -30,9 +50,9 @@ class FitnessFunction:
         
         device = torch.device('cpu')
 
-        def _evaluate(num_train_episodes: int, num_test_episodes: int) -> float:
+        def _evaluate() -> float:
             """ Helper (one run) """
-            env = Environment('LunarLander-v2', device=device)
+            env = Environment(env_name=self.env_name, device=device)
 
             model = Model(
                 input_size = env.observation_space.shape[0],
@@ -56,17 +76,12 @@ class FitnessFunction:
             )
 
             start = perf_counter()
-            agent.train(num_episodes=num_train_episodes, env=env)
+            agent.train(num_episodes=self.num_train_episodes, env=env)
             end = perf_counter()
             print(f'Training took {end - start} seconds.')
-            return agent.test(num_episodes=num_test_episodes)
-
-        # HARDCODED (for now)
-        num_runs = 3
-        num_train_episodes = 1000
-        num_test_episodes = 100
+            return agent.test(num_episodes=self.num_test_episodes)
         
-        res = sum(_evaluate(num_train_episodes, num_test_episodes) for _ in range(num_runs)) / num_runs
+        res = sum(_evaluate() for _ in range(self.num_runs)) / self.num_runs
 
         print(f'{bitstring} -> {res}')
         print('-' * 80)
