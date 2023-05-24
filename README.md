@@ -17,7 +17,9 @@ HyTEA is a hyperparameter tuning library that uses evolutionary algorithms to fi
 
 ### Requirements
 
-You'll need Python 3.11.0 or higher
+You'll need Python 3.11.0 or higher.
+
+### Installation
 
 1. Clone the repository
 2. Optionally create & activate a virtual environment
