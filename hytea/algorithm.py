@@ -34,17 +34,28 @@ class EvolutionaryAlgorithm:
         self.generations = 50
     
     def run(self) -> None:
-        """
-        Run the evolutionary algorithm.
-        """
+        """ Main loop. """
         self.initialize_population()
 
         for i in range(self.generations):
-            fitness_values = self.evaluate_population()
+            fitness_values = self.evaluate_population(first_generation=(i == 0))
+
+            # candidate 0
+            # = self.population[0]
+            # fitness value can be found in fitness_values[0]
+
             print(f"Generation {i}: {np.mean(fitness_values)}")
+            # 20%
+
+            # het is altijd waar dat de self.population[:self.mu_] de parents zijn
+            # dusss, fitness_values[:self.mu_] zijn de fitness values van de parents
+
             selected_candidates = self.select(fitness_values)
+            # 80%
             crossovered_candidates = self.crossover(selected_candidates)
+            # we want this mutate operation to be performed on the children ONLY
             mutated_candidates = self.mutate(crossovered_candidates)
+            # this is where the merging happens
             self.replace(mutated_candidates)
         
         best_candidate = self.get_best_candidate()
@@ -54,12 +65,17 @@ class EvolutionaryAlgorithm:
         """
         Initialize the population with random bitstrings.
         """
+        # 2D array of shape (population_size, candidate_size) with random integers between 0 and 1
         self.population = np.random.randint(2, size=(self.population_size, self.candidate_size), dtype=np.uint8)
     
     def evaluate_population(self) -> np.ndarray:
+        """ Evaluate the population by training and testing the bitstrings.
+
+        ### Returns:
+        `np.ndarray` fitness_values: A 1D array with the fitness values of the population.
+        Note that the order (i.e. index) of each candidate corresponds to the order of the fitness value.
         """
-        Evaluate the population by training and testing the bitstrings.
-        """
+        # This is going to be changed
         return np.array([self.evaluate(candidate) for candidate in self.population])
 
     def select(self, fitness_values: np.ndarray) -> np.ndarray:
@@ -79,9 +95,7 @@ class EvolutionaryAlgorithm:
 
 
     def crossover(self, selected_candidates: np.ndarray) -> np.ndarray:
-        """
-        Perform crossover on the selected candidates.
-        """
+        """ This should return ONLY the children!! """
         crossovered_candidates = np.empty((self.lambda_, selected_candidates.shape[1]))
 
         for i in range(0, self.lambda_, 2):
@@ -98,6 +112,7 @@ class EvolutionaryAlgorithm:
             crossovered_candidates[i] = offspring1
             crossovered_candidates[i + 1] = offspring2
         
+        # change this
         return np.concatenate((selected_candidates, crossovered_candidates))
 
     def mutate(self, crossovered_candidates: np.ndarray) -> np.ndarray:

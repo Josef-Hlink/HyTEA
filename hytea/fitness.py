@@ -62,8 +62,8 @@ class FitnessFunction:
             return agent.test(num_episodes=num_test_episodes)
 
         # HARDCODED (for now)
-        num_runs = 3
-        num_train_episodes = 1000
+        num_runs = 2
+        num_train_episodes = 10
         num_test_episodes = 100
         
         res = sum(_evaluate(num_train_episodes, num_test_episodes) for _ in range(num_runs)) / num_runs
