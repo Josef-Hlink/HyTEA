@@ -44,8 +44,6 @@ class FitnessFunction:
         `float`: reward per episode, averaged over num_episodes and num_runs.
         """
 
-        bitstring = bitstring.astype(np.int8)
-
         config = self.decoder.decode(bitstring)
 
         if self.D: print(f'Config: {config}')

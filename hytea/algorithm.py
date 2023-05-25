@@ -59,7 +59,8 @@ class EvolutionaryAlgorithm:
 
         for i in range(self.num_generations):
             fitness_values = self.evaluate_population()
-            print(f"Generation {i}: {np.mean(fitness_values)}")
+            print(f'Generation {i}: {np.mean(fitness_values)}')
+            print([round(f, 2) for f in fitness_values])
             selected_candidates = self.select(fitness_values)
             crossovered_candidates = self.crossover(selected_candidates)
             mutated_candidates = self.mutate(crossovered_candidates)
@@ -83,7 +84,7 @@ class EvolutionaryAlgorithm:
         """
         Select the best candidates from the population using tournament selection.
         """
-        selected_candidates = np.empty((self.mu_, self.candidate_size))
+        selected_candidates = np.empty((self.mu_, self.candidate_size), dtype=np.uint8)
 
         for i in range(self.mu_):
             tournament_indices = np.random.choice(len(self.population), self.pool_size, replace=False)
@@ -99,7 +100,7 @@ class EvolutionaryAlgorithm:
         """
         Perform crossover on the selected candidates.
         """
-        crossovered_candidates = np.empty((self.lambda_, selected_candidates.shape[1]))
+        crossovered_candidates = np.empty((self.lambda_, selected_candidates.shape[1]), dtype=np.uint8)
 
         for i in range(0, self.lambda_, 2):
             parent1_index = i % self.mu_
