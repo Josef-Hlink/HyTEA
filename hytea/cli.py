@@ -18,7 +18,7 @@ def cli() -> None:
         config = DotDict.from_dict(safe_load(f))
 
     bs = BitStringDecoder(config)
-    ff = FitnessFunction(bs, args.env_name, args.num_train_episodes, args.num_test_episodes, args.num_runs)
+    ff = FitnessFunction(bs, args.env_name, args.num_train_episodes, args.num_test_episodes, args.num_runs, args.debug)
     ea = EvolutionaryAlgorithm(args.num_generations, args.population_size, ff)
     ea.run()
 
@@ -38,6 +38,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument('--runs', dest='num_runs', type=int, default=3, help='The number of runs to average the reward over.')
     parser.add_argument('--wt', dest='wandb_team', type=str, default='HyTEA', help='The name of the wandb team.')
     parser.add_argument('-W', dest='use_wandb', action='store_true', help='Use wandb for logging.')
+    parser.add_argument('-D', dest='debug', action='store_true', help='Enable debug mode.')
     return parser.parse_args()
 
 

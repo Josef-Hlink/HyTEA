@@ -15,6 +15,7 @@ class FitnessFunction:
         num_train_episodes: int,
         num_test_episodes: int,
         num_runs: int,
+        debug: bool = False
     ) -> None:
         """ Fitness function for the bitstrings.
         
@@ -30,6 +31,7 @@ class FitnessFunction:
         self.num_train_episodes = num_train_episodes
         self.num_test_episodes = num_test_episodes
         self.num_runs = num_runs
+        self.D = debug
         return
 
     def evaluate(self, bitstring: np.ndarray) -> float:
@@ -46,7 +48,7 @@ class FitnessFunction:
 
         config = self.decoder.decode(bitstring)
 
-        print(f'Config: {config}')
+        if self.D: print(f'Config: {config}')
         
         device = torch.device('cpu')
 
@@ -78,12 +80,13 @@ class FitnessFunction:
             start = perf_counter()
             agent.train(num_episodes=self.num_train_episodes, env=env)
             end = perf_counter()
-            print(f'Training took {end - start} seconds.')
+            if self.D: print(f'Training took {end - start} seconds.')
             return agent.test(num_episodes=self.num_test_episodes)
         
         res = sum(_evaluate() for _ in range(self.num_runs)) / self.num_runs
 
-        print(f'{bitstring} -> {res}')
-        print('-' * 80)
+        if self.D:
+            print(f'{bitstring} -> {res}')
+            print('-' * 80)
 
         return res
