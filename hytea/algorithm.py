@@ -5,8 +5,11 @@ Evolutionary Algorithm
 This module contains the evolutionary algorithm class and its components.
 """
 
-import numpy as np
+from multiprocessing import Pool
+
 from hytea.fitness import FitnessFunction
+
+import numpy as np
 
 
 class EvolutionaryAlgorithm:
@@ -72,10 +75,9 @@ class EvolutionaryAlgorithm:
         self.population = np.random.randint(2, size=(self.population_size, self.candidate_size), dtype=np.uint8)
     
     def evaluate_population(self) -> np.ndarray:
-        """
-        Evaluate the population by training and testing the bitstrings.
-        """
-        return np.array([self.evaluate(candidate) for candidate in self.population])
+        """ Evaluate the population by training and testing the bitstrings. """
+        with Pool() as pool:
+            return np.array(pool.map(self.evaluate, self.population))
 
     def select(self, fitness_values: np.ndarray) -> np.ndarray:
         """
