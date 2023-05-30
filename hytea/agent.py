@@ -85,7 +85,7 @@ class Agent:
         with torch.no_grad(): probs, _ = self.model(state)
         return Categorical(probs).sample().item()
 
-    def _learn(self, trajectory: Trajectory) -> None:
+    def _learn(self, trajectory: Trajectory, baseline=False) -> None:
         """ Learns from a trajectory using the actor-critic algorithm.
 
         ### Args:
@@ -112,18 +112,27 @@ class Agent:
             # substitute value of last state with bootstrap value
             _R = torch.cat((R[slc], V_[slc][-1] * (~D[slc][-1]).unsqueeze(-1)))
             # sum of discounted rewards
-            G[i] = sum(self._discount(_R))
+            G[i] = self._discount_cumsum(_R)
 
+        # normalize rewards
+        G = (G - G.mean()) / (G.std() + 1e-8)
+        
+        # add entropy regularization        
+        log_probs = dist.log_prob(A) + (0.1 * dist.entropy())
+    
+        # baseline subtracted for reducing variance
+        if baseline:
+            G = G - V
+        
         # actor gradient
-        aGrad = -dist.log_prob(A) * (G - V)
-        # add entropy regularization
-        aGrad -= 0.1 * dist.entropy()
+        aGrad = -log_probs * G 
+        
         # critic gradient
         cGrad = F.mse_loss(V, G)
 
         # backward pass
         self.optimizer.zero_grad()
-        (aGrad + cGrad).mean().backward()
+        (aGrad.sum() + cGrad).backward()
         self.optimizer.step()
         self.scheduler.step()
 
@@ -133,3 +142,8 @@ class Agent:
         """ Discounts the Rewards. """
         assert tensor.dim() == 1, f'tensor must be 1-dimensional, got {tensor.dim()}'
         return self.discounts[:tensor.shape[0]] * tensor
+    
+    def _discount_cumsum(self, tensor: torch.Tensor) -> torch.Tensor:
+        """ Discounts the Rewards. """
+        assert tensor.dim() == 1, f'tensor must be 1-dimensional, got {tensor.dim()}'
+        return torch.cumsum(self.gamma * tensor.flip(0), dim=0).sum()
