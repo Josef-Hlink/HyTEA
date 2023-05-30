@@ -21,7 +21,9 @@ class WandbLogger:
             entity = config.wandb_team,
             group = config.group_name,
             job_type = config.job_type,
-            config = config
+            config = config,
+            reinit = True,
+            monitor_gym = False,
         )
         return
     
