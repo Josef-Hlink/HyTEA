@@ -1,6 +1,6 @@
-import wandb
-import randomname
 import numpy as np
+import wandb
+from randomname import get_name
 from hytea.utils import DotDict
 
 
@@ -11,8 +11,8 @@ from hytea.utils import DotDict
 class WandbLogger:
     """ Log hyperparameters and results to wandb. 
     
-    Args:
-        config (dict): configuration dictionary.
+    ### Args:
+    `DotDict` config: full configuration of the experiment.
     """	
     def __init__(self, config: DotDict) -> None:
         self.config = config
@@ -50,17 +50,20 @@ class WandbLogger:
     def finish(self) -> bool:
         """ Finish wandb run. """	
         return self.run.finish()
-    
-# create random name for group and job_type
-def create_random_name() -> str:
-    return randomname.get_name()
 
-# a group represents the entire experiment and can be versioned on wandb
+
+def create_random_name() -> str:
+    """ Create a random name for an individual run. """
+    return get_name()
+
 def create_group_name(config: DotDict, gen: int) -> str:
+    """ Create a group name for a generation. """
     return f'Gen{gen}'
 
 def create_project_name(config: DotDict) -> str:
+    """ Create a project name for an experiment. """
     return f'{create_random_name()}-{config.env_name}-{config.num_train_episodes}-{config.num_test_episodes}-{config.num_runs}'
 
 def create_job_type_name(bitstring: np.ndarray) -> str:
+    """ Create a job type name for a bitstring. """
     return f'{create_random_name()}-{"".join(map(str, bitstring))}'

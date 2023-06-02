@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 
 import argparse
 from pathlib import Path
@@ -11,6 +12,7 @@ from hytea.algorithm import EvolutionaryAlgorithm
 from hytea.wblog import create_project_name
 
 def cli() -> None:
+    """ Entry point for the command line interface. """
 
     args = parse_args()
     args = DotDict.from_dict(vars(args))

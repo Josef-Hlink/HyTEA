@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 from hytea.transitions import Trajectory
 from hytea.model import Model
 from hytea.environment import Environment
@@ -26,6 +24,8 @@ class Agent:
         self.gamma = gamma
         self.n_steps = n_steps
 
+        self.trained = False
+        self.env = None
         return
     
     def train(self, num_episodes: int, env: Environment) -> list[float]:
@@ -39,13 +39,15 @@ class Agent:
         `list[float]`: history of total reward per episode.
         """
         self.env = env
-        self.discounts = torch.tensor([self.gamma**i for i in range(self.env.spec.max_episode_steps)]).to(self.device)
+        self.discounts = torch.tensor([self.gamma**i for i in range(self.n_steps)]).to(self.device)
         history = []
 
         for _ in range(num_episodes):
             trajectory = self._sample_episode()
             history.append(trajectory.total_reward)
             self._learn(trajectory)
+
+        self.trained = True
         return history
     
     def test(self, num_episodes: int) -> float:
@@ -57,7 +59,7 @@ class Agent:
         ### Returns:
         `float`: average reward per episode.
         """
-        assert self.env is not None, 'Agent has not been trained yet.'
+        assert self.trained, 'Agent must be trained before testing.'
         total_reward = 0
         for _ in range(num_episodes):
             trajectory = self._sample_episode()

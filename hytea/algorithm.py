@@ -1,10 +1,3 @@
-#!/usr/bin/env python
-
-"""
-Evolutionary Algorithm
-This module contains the evolutionary algorithm class and its components.
-"""
-
 from multiprocessing import Pool
 
 from hytea.fitness import FitnessFunction
@@ -17,14 +10,6 @@ class EvolutionaryAlgorithm:
     """
     Evolutionary Algorithm to recommend different neural networks.
     The bitstrings will represent the neural network architecture and its hyperparameters.
-
-    Very simple implementation of a genetic algorithm with fixed hyperparameters to not overcomplicate things.
-    - Population size: 50 or 20 idk
-    - mu + lambda with mu is a fifth of the population size and lambda is the rest
-    - Tournament selection with a pool size of a quarter of the population size
-    - 1p crossover
-    - Mutation rate: 0.1
-    - 50 generations (or more if it turns out to be fast)
     """
 
     def __init__(self,
@@ -69,13 +54,11 @@ class EvolutionaryAlgorithm:
             mutated_candidates = self.mutate(crossovered_candidates)
             self.replace(mutated_candidates)
         
-        best_candidate = self.get_best_candidate()
-        print(best_candidate)
+        best_candidate = self.population[np.argmax(fitness_values)]
+        print(f'BEST: {best_candidate} -> {np.max(fitness_values)}')
 
     def initialize_population(self) -> None:
-        """
-        Initialize the population with random bitstrings.
-        """
+        """ Initialize the population with random bitstrings. """
         self.population = np.random.randint(2, size=(self.population_size, self.candidate_size), dtype=np.uint8)
     
     def evaluate_population(self, gen: int) -> np.ndarray:
@@ -85,9 +68,7 @@ class EvolutionaryAlgorithm:
             return np.array(pool.starmap(self.evaluate, [(candidate, group_name, create_job_type_name(candidate)) for candidate in self.population]))
         
     def select(self, fitness_values: np.ndarray) -> np.ndarray:
-        """
-        Select the best candidates from the population using tournament selection.
-        """
+        """ Select the best candidates from the population using tournament selection. """
         selected_candidates = np.empty((self.mu_, self.candidate_size), dtype=np.uint8)
 
         for i in range(self.mu_):
@@ -101,9 +82,7 @@ class EvolutionaryAlgorithm:
 
 
     def crossover(self, selected_candidates: np.ndarray) -> np.ndarray:
-        """
-        Perform crossover on the selected candidates.
-        """
+        """ Perform crossover on the selected candidates. """
         crossovered_candidates = np.empty((self.lambda_, selected_candidates.shape[1]), dtype=np.uint8)
 
         for i in range(0, self.lambda_, 2):
@@ -123,25 +102,12 @@ class EvolutionaryAlgorithm:
         return np.concatenate((selected_candidates, crossovered_candidates))
 
     def mutate(self, crossovered_candidates: np.ndarray) -> np.ndarray:
-        """
-        Mutate the crossovered candidates.
-        """
+        """ Mutate the crossovered candidates. """
         mask = np.random.rand(*crossovered_candidates.shape) < self.mutation_rate
         mutated_population = np.where(mask, 1-crossovered_candidates, crossovered_candidates)
 
         return mutated_population
 
     def replace(self, mutated_candidates: np.ndarray) -> None:
-        """
-        Replace the old population with the new population.
-        """
+        """ Replace the old population with the new population. """
         self.population = mutated_candidates
-
-    def get_best_candidate(self) -> np.ndarray:
-        """
-        Return the best candidate from the population.
-        """
-        fitness_values = self.evaluate_population()
-        best_candidate_index = np.argmax(fitness_values)
-        best_candidate = self.population[best_candidate_index]
-        return best_candidate

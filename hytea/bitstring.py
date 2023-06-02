@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 Encoder and decoder for the bitstrings.
 """
@@ -9,9 +7,7 @@ import numpy as np
 
 
 class BitStringDecoder():
-    """	
-    Encoder for the bitstrings.	
-    """
+    """	Encoder for the bitstrings.	"""
     
     def __init__(self, config: DotDict) -> None:
         self.blueprint = config

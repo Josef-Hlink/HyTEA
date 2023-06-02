@@ -2,7 +2,7 @@ from time import perf_counter
 
 from hytea import Environment, Model, Agent
 from hytea.bitstring import BitStringDecoder
-from hytea.wblog import WandbLogger, create_job_type_name
+from hytea.wblog import WandbLogger
 from hytea.utils import DotDict
 
 import torch

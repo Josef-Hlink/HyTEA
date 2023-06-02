@@ -1,9 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Data structures for storing transitions.
-"""
-
 import torch
 
 
