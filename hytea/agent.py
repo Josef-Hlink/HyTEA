@@ -39,7 +39,7 @@ class Agent:
         `list[float]`: history of total reward per episode.
         """
         self.env = env
-        self.discounts = torch.tensor([self.gamma**i for i in range(self.n_steps)]).to(self.device)
+        self.discounts = torch.tensor([self.gamma**i for i in range(self.n_steps+1)]).to(self.device)
         history = []
 
         for _ in range(num_episodes):
@@ -114,7 +114,7 @@ class Agent:
             # substitute value of last state with bootstrap value
             _R = torch.cat((R[slc], V_[slc][-1] * (~D[slc][-1]).unsqueeze(-1)))
             # sum of discounted rewards
-            G[i] = self._discount_cumsum(_R)
+            G[i] = self._discount(_R)
 
         # normalize rewards
         G = (G - G.mean()) / (G.std() + 1e-8)
@@ -140,12 +140,9 @@ class Agent:
 
         return
 
-    def _discount(self, tensor: torch.Tensor) -> torch.Tensor:
+    def _discount(self, tensor: torch.Tensor) -> float:
         """ Discounts the Rewards. """
         assert tensor.dim() == 1, f'tensor must be 1-dimensional, got {tensor.dim()}'
-        return self.discounts[:tensor.shape[0]] * tensor
-    
-    def _discount_cumsum(self, tensor: torch.Tensor) -> torch.Tensor:
-        """ Discounts the Rewards. """
-        assert tensor.dim() == 1, f'tensor must be 1-dimensional, got {tensor.dim()}'
-        return torch.cumsum(self.gamma * tensor.flip(0), dim=0).sum()
+        if tensor.shape[0] == self.n_steps+1:
+            return (self.discounts * tensor).sum()
+        return (self.discounts[:tensor.shape[0]] * tensor).sum().item()

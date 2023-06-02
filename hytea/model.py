@@ -14,46 +14,33 @@ class Model(torch.nn.Module):
         self.hidden_size = hidden_size
         self.num_layers = num_layers
         self.dropout_rate = dropout_rate
+        self.using_dropout = dropout_rate > 0
         self.hidden_activation = eval(f'F.{hidden_activation}')
-        
-        self.fc1 = torch.nn.Linear(input_size, hidden_size)
-        self.fc2 = torch.nn.Linear(hidden_size, hidden_size*2)
-        
-        if dropout_rate > 0:
-            self.do1 = torch.nn.Dropout(dropout_rate)
-            self.do2 = torch.nn.Dropout(dropout_rate)
-        
+
+        self.fc0 = torch.nn.Linear(input_size, hidden_size)
+        self.do0 = torch.nn.Dropout(dropout_rate) if self.using_dropout else None
+
         for i in range(num_layers-1):
-            setattr(self, f'fc{i+3}', torch.nn.Linear(hidden_size*2, hidden_size*2))
-            if dropout_rate > 0:
-                setattr(self, f'do{i+3}', torch.nn.Dropout(dropout_rate))
+            setattr(self, f'fc{i+1}', torch.nn.Linear(hidden_size, hidden_size))
+            setattr(self, f'do{i+1}', torch.nn.Dropout(dropout_rate) if self.using_dropout else None)
         
-        # actor head
-        setattr(self, f'fc{num_layers+2}', torch.nn.Linear(hidden_size*2, output_size))
-        
-        # critic head
-        setattr(self, f'fc{num_layers+3}', torch.nn.Linear(hidden_size*2, 1))
+        self.actor_head = torch.nn.Linear(hidden_size, output_size)
+        self.critic_head = torch.nn.Linear(hidden_size, 1)
         
         return
     
     def forward(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
-        x = self.fc1(x)
-        if self.dropout_rate > 0:
-            x = self.do1(x)
-        x = self.hidden_activation(x)
-        for i in range(self.num_layers):
-            x = getattr(self, f'fc{i+2}')(x)
-            if self.dropout_rate > 0:
-                x = getattr(self, f'do{i+2}')(x)
+        """ Forward pass through the model.
+
+        Takes a state (or batch of states) and returns the actor and critic outputs.
+        """
+        for i in range(0, self.num_layers):
+            x = getattr(self, f'fc{i}')(x)
+            if self.using_dropout:
+                x = getattr(self, f'do{i}')(x)
             x = self.hidden_activation(x)
-        
-        # actor head
-        actor_output = getattr(self, f'fc{self.num_layers+2}')(x)
-        
-        # critic head
-        critic_output = getattr(self, f'fc{self.num_layers+3}')(x)
-        
-        return F.softmax(actor_output, dim=-1), critic_output
+
+        return F.softmax(self.actor_head(x), dim=-1), self.critic_head(x)
     
     def __call__(self, *args, **kwargs) -> tuple[torch.Tensor, torch.Tensor]:
         """ For more accurate type hinting. """

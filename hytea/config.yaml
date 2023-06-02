@@ -27,3 +27,6 @@ optimizer:
   lr_decay:
     bits: 2
     vals: [1, 0.99, 0.9, 0.85]
+  lr_step:
+    bits: 2
+    vals: [5, 10, 50, 100]
