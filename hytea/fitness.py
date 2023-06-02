@@ -12,29 +12,21 @@ import numpy as np
 class FitnessFunction:
 
     def __init__(self,
-        decoder: BitStringDecoder,
-        env_name: str,
-        num_train_episodes: int,
-        num_test_episodes: int,
-        num_runs: int,
         args: DotDict,
-        debug: bool = False,
+        decoder: BitStringDecoder,
     ) -> None:
         """ Fitness function for the bitstrings.
         
         ### Args:
+        `DotDict` args: The arguments to use for wandb logging.
         `BitStringDecoder` decoder: The decoder to use.
-        `str` env_name: The name of the environment to use.
-        `int` num_train_episodes: The number of episodes to train for.
-        `int` num_test_episodes: The number of episodes to test for.
-        `int` num_runs: The number of individual runs to average over.
         """
         self.decoder = decoder
-        self.env_name = env_name
-        self.num_train_episodes = num_train_episodes
-        self.num_test_episodes = num_test_episodes
-        self.num_runs = num_runs
-        self.D = debug
+        self.env_name: str = args.env_name
+        self.num_train_episodes: int = args.num_train_episodes
+        self.num_test_episodes: int = args.num_test_episodes
+        self.num_runs: int = args.num_runs
+        self.D: bool = args.debug
         self.args = args
         self.device = torch.device('cpu')
         return

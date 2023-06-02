@@ -22,8 +22,8 @@ def cli() -> None:
         config = DotDict.from_dict(safe_load(f))
 
     bs = BitStringDecoder(config)
-    ff = FitnessFunction(bs, args.env_name, args.num_train_episodes, args.num_test_episodes, args.num_runs, args, args.debug)
-    ea = EvolutionaryAlgorithm(args.num_generations, args.population_size, ff, args)
+    ff = FitnessFunction(args, bs)
+    ea = EvolutionaryAlgorithm(args, ff)
     ea.run()
 
     return
