@@ -11,6 +11,7 @@ setup(
     entry_points = {
         'console_scripts': [
             'hytea = hytea.cli:cli',
+            'hytea-decode = hytea.bitstring:cli',
         ],
     },
     install_requires = [

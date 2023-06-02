@@ -1,8 +1,12 @@
-"""
-Encoder and decoder for the bitstrings.
-"""
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import argparse
+from pathlib import Path
 
 from hytea.utils import DotDict
+
+from yaml import safe_load
 import numpy as np
 
 
@@ -34,3 +38,21 @@ class BitStringDecoder():
                 bitstring = bitstring[b:]
 
         return config
+
+
+def cli() -> None:
+    parser = argparse.ArgumentParser(description='Bitstring decoder.')
+    parser.add_argument('bitstring', nargs='+', help='The bitstring to decode.')
+    args = parser.parse_args()
+
+    with open(Path(__file__).resolve().parents[0] / 'config.yaml', 'r') as f:
+        blueprint = DotDict.from_dict(safe_load(f))
+
+    bs = BitStringDecoder(blueprint)
+    config = bs.decode(np.array(args.bitstring, dtype=int))
+    print(config)
+    return
+
+
+if __name__ == '__main__':
+    print(cli())
