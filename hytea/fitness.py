@@ -67,7 +67,6 @@ class FitnessFunction:
             logger = WandbLogger(
                 config = config,
             )
-
         env = Environment(env_name=self.env_name, device=self.device)
 
         model = Model(
@@ -80,7 +79,7 @@ class FitnessFunction:
         ).to(self.device)
 
         optimizer = torch.optim.Adam(model.parameters(), lr=config.optimizer.lr)
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=config.optimizer.lr_decay)
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=config.optimizer.lr_step, gamma=config.optimizer.lr_decay)
 
         agent = Agent(
             model = model,
