@@ -11,19 +11,36 @@ Contributors:
 
 ## Description
 
-HyTEA is a hyperparameter tuning library that uses evolutionary algorithms to find the optimal hyperparameters (including architecture) for a given game.
+HyTEA is a hyperparameter tuning library that uses evolutionary algorithms to find the optimal hyperparameters (including architecture) for a given game environment.
+It is built from scratch with [torch](https://pytorch.org/) and tears.
+For now, our CLI only supports [OpenAI Gymnasium](https://gymnasium.farama.org/) environments (see [list](#list-of-supported-environments)).
+But it should be easy to extend to other environments.
 
 ## Setup
 
-### Requirements
+1. Clone the repository
+
+2. Create & activate a virtual environment
 
 You'll need Python 3.11.0 or higher.
+The easiest way to get it (if you don't already have it) is to create a virtual environment using [conda](https://docs.conda.io/en/latest/):
 
-### Installation
+```bash
+conda create -n hytea python==3.11.0
+conda activate hytea
+```
 
-1. Clone the repository
-2. Optionally create & activate a virtual environment
-3. Install the requirements using `pip install -e .`
+If you already have Python 3.11.0, just do:
+    
+```bash
+python -m venv hytea
+source hytea/bin/activate
+```
+
+3. Install the requirements using:
+```bash
+pip install -e .
+```
 
 ## Usage
 
@@ -34,3 +51,11 @@ hytea run  # runs the complete hyperparameter tuning process
 hytea test  # tests the default hyperparameters (single run)
 hytea decode  # decodes a given hyperparameter string
 ```
+
+## List of supported environments
+
+- [x] MountainCar-v0
+- [x] CartPole-v1
+- [x] Acrobot-v1
+- [x] LunarLander-v2
+- [ ] BipedalWalker-v3
