@@ -44,3 +44,18 @@ def test(args: argparse.Namespace) -> None:
     print(f'Test reward: {test_reward:.2f}')
 
     return
+
+def add_test_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
+    parser.add_argument('--env_name', type=str,
+        default='LunarLander-v2', help='The environment to use.'
+    )
+    parser.add_argument('--num_train_episodes', type=int,
+        default=1000, help='The number of episodes to train for.'
+    )
+    parser.add_argument('--num_test_episodes', type=int,
+        default=100, help='The number of episodes to test for.'
+    )
+    parser.add_argument('--num_runs', type=int,
+        default=1, help='The number of individual runs to average over.'
+    )
+    return parser

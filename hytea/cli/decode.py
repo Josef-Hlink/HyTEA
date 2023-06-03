@@ -18,3 +18,9 @@ def decode(args: argparse.Namespace) -> None:
     print(config)
 
     return
+
+def add_decode_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
+    """ Add arguments to the "decode" subparser. """
+    parser.add_argument('bitstring', nargs='+', help='The bitstring to decode.')
+    return parser
+
