@@ -1,8 +1,8 @@
 from time import perf_counter
 
 from hytea import Environment, Model, Agent
-from hytea.bitstring import BitStringDecoder
-from hytea.wblog import WandbLogger
+from hytea.bitstringdecoder import BitStringDecoder
+from hytea.utils.wblog import WandbLogger
 from hytea.utils import DotDict
 
 import torch

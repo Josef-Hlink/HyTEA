@@ -1,7 +1,7 @@
 from multiprocessing import Pool
 
 from hytea.fitness import FitnessFunction
-from hytea.wblog import create_group_name, create_job_type_name
+from hytea.utils.wblog import create_group_name, create_job_type_name
 from hytea.utils import DotDict
 import numpy as np
 

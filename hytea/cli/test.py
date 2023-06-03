@@ -1,25 +1,22 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
 from time import perf_counter
+import argparse
 from pathlib import Path
 
 from hytea.utils import DotDict
-from hytea import Agent, Environment, Model
+from hytea import Environment, Model, Agent
 
 from yaml import safe_load
 import torch
 
 
-def cli() -> None:
-    
-    with open(Path(__file__).resolve().parents[0] / 'config.yaml', 'r') as f:
+def test(args: argparse.Namespace) -> None:
+    """ Tests the training process of a single agent. """
+
+    with open(Path(__file__).resolve().parents[1] / 'config.yaml', 'r') as f:
         blueprint = DotDict.from_dict(safe_load(f))
 
-    print(blueprint)
-
     device = torch.device('cpu')
-    env = Environment(env_name='LunarLander-v2', device=device)
+    env = Environment(env_name=args.env_name, device=device)
     model = Model(
         input_size = env.observation_space.shape[0],
         output_size = env.action_space.n,
@@ -41,13 +38,9 @@ def cli() -> None:
     )
 
     start = perf_counter()
-    agent.train(num_episodes=1000, env=env)
+    agent.train(num_episodes=args.num_train_episodes, env=env)
     print(f'Training took {perf_counter() - start:.2f} seconds.')
-    test_reward = agent.test(num_episodes=100)
+    test_reward = agent.test(num_episodes=args.num_test_episodes)
     print(f'Test reward: {test_reward:.2f}')
 
     return
-
-
-if __name__ == '__main__':
-    cli()

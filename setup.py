@@ -10,10 +10,7 @@ setup(
     packages = find_packages(),
     entry_points = {
         'console_scripts': [
-            'hytea = hytea.cli:cli',
-            'hytea-decode = hytea.bitstring:cli',
-            'hytea-test = hytea.test_run:cli',
-            'hytea-quickie = hytea.quickie:cli'
+            'hytea = hytea.cli.main:main',
         ],
     },
     install_requires = [
