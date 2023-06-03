@@ -27,7 +27,7 @@ class EvolutionaryAlgorithm:
         self.num_generations: int = args.num_generations
         self.population_size: int = args.population_size
         
-        self.mu_: int = args.population_size // 2  # NOTE: pop_size must ALWAYS be even
+        self.mu_: int = args.population_size // 2
         self.lambda_: int = args.population_size - self.mu_
         self.mutation_rate = 0.1
 
