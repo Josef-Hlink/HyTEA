@@ -47,9 +47,7 @@ class FitnessFunction:
 
         res = sum(self.evaluate_single(config, group_name, job_type_name) for _ in range(self.num_runs)) / self.num_runs
 
-        # gamma nstep num_layers dropout hidden_size hidden_activation lr lr_decay lr_step
-        print(' gm  ns  nl  do  hs  a lr  ld  ls')
-        print('    |   |   |   |   | |   |   |')
+        print(self.decoder.separator)
         print(f'{bitstring} -> {res}')
         print('-' * 80)
 

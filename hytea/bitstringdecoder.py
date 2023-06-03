@@ -31,3 +31,14 @@ class BitStringDecoder():
                 bitstring = bitstring[b:]
 
         return config
+
+    @property
+    def separator(self) -> str:
+        """ Separator for the bitstring. """
+        string = '|'
+        for scope in self.blueprint.keys():
+            for k, v in self.blueprint[scope].items():
+                num_spaces = 1 + (v.bits - 1) * 2
+                string += ' ' * num_spaces + '|'
+        return string
+
