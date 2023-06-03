@@ -27,7 +27,7 @@ class Agent:
 
         self.trained = False
         self.env = None
-        self.entropy_weight = 0.1
+        self.entropy_weight = 0.001
         self.baseline = True
         return
     
@@ -109,11 +109,21 @@ class Agent:
         # normalize returns
         G = (G - G.mean()) / (G.std() + 1e-10)
         
+        loss = self.loss3(G, P, V, E)
+        
+        # update model
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+        self.scheduler.step()
+        return
+    
+    def loss1(self, G: torch.Tensor, P: torch.Tensor, V: torch.Tensor, E: torch.Tensor) -> torch.Tensor:
         # compute loss
         loss = 0
         for p, v, g, e in zip(P, V, G, E):
             # entropy regularization
-            # p = p + self.entropy_weight * e
+            p = p + self.entropy_weight * e
             
             # baseline subtraction
             if self.baseline:
@@ -127,11 +137,35 @@ class Agent:
             
             # total loss
             loss += actor_loss + critic_loss
+        return loss
+    
+    def loss2(self, G: torch.Tensor, P: torch.Tensor, V: torch.Tensor, E: torch.Tensor) -> torch.Tensor:
+        if self.baseline:
+            G = G - V
             
-        # update model
-        self.optimizer.zero_grad()
-        loss.backward()
-        self.optimizer.step()
-        self.scheduler.step()
-        return
+        P = P + self.entropy_weight * E
+        
+        actor_loss = -P * G
+        
+        critic_loss = F.smooth_l1_loss(V, G)
+        
+        loss = (actor_loss.sum() + critic_loss.sum())
+        
+        return loss
+    
+    def loss3(self, G: torch.Tensor, P: torch.Tensor, V: torch.Tensor, E: torch.Tensor) -> torch.Tensor:
+        if self.baseline:
+            G = G - V
+        
+        P = P + self.entropy_weight * E
+        
+        actor_loss = -P * G
+        
+        critic_loss = F.smooth_l1_loss(V, G)
+        
+        loss = (actor_loss + critic_loss).sum()
+        
+        return loss
+
+    
     
