@@ -5,6 +5,14 @@ import torch
 class Environment:
 
     def __init__(self, env_name: str, device: torch.device):
+        
+        assert env_name in  [
+            'MountainCar-v0',
+            'CartPole-v1',
+            'Acrobot-v1',
+            'LunarLander-v2',
+        ], 'Environment not supported. See README.md for supported environments.'
+
         self.gym_env: gym.Env = gym.make(env_name)
         self.device = device
     
