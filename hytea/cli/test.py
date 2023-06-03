@@ -37,25 +37,26 @@ def test(args: argparse.Namespace) -> None:
         device = device
     )
 
-    start = perf_counter()
-    agent.train(num_episodes=args.num_train_episodes, env=env)
-    print(f'Training took {perf_counter() - start:.2f} seconds.')
-    test_reward = agent.test(num_episodes=args.num_test_episodes)
-    print(f'Test reward: {test_reward:.2f}')
+    for _ in range(args.num_runs):
+        start = perf_counter()
+        agent.train(num_episodes=args.num_train_episodes, env=env)
+        print(f'Training took {perf_counter() - start:.2f} seconds.')
+        test_reward = agent.test(num_episodes=args.num_test_episodes)
+        print(f'Test reward: {test_reward:.2f}')
 
     return
 
 def add_test_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
-    parser.add_argument('--env_name', type=str,
+    parser.add_argument('--env', dest='env_name', type=str,
         default='LunarLander-v2', help='The environment to use.'
     )
-    parser.add_argument('--num_train_episodes', type=int,
+    parser.add_argument('--train', dest='num_train_episodes', type=int,
         default=1000, help='The number of episodes to train for.'
     )
-    parser.add_argument('--num_test_episodes', type=int,
+    parser.add_argument('--test', dest='num_test_episodes', type=int,
         default=100, help='The number of episodes to test for.'
     )
-    parser.add_argument('--num_runs', type=int,
+    parser.add_argument('--runs', dest='num_runs', type=int,
         default=1, help='The number of individual runs to average over.'
     )
     return parser
