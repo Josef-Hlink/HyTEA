@@ -12,6 +12,7 @@ setup(
         'console_scripts': [
             'hytea = hytea.cli:cli',
             'hytea-decode = hytea.bitstring:cli',
+            'hytea-test = hytea.test_run:cli'
         ],
     },
     install_requires = [
