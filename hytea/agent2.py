@@ -28,7 +28,7 @@ class Agent:
         self.trained = False
         self.env = None
         self.entropy_weight = 0.1
-        self.baseline = False
+        self.baseline = True
         return
     
     def train(self, num_episodes: int, env: Environment) -> list[float]:
@@ -113,7 +113,7 @@ class Agent:
         loss = 0
         for p, v, g, e in zip(P, V, G, E):
             # entropy regularization
-            p = p + self.entropy_weight * e
+            # p = p + self.entropy_weight * e
             
             # baseline subtraction
             if self.baseline:

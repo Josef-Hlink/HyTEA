@@ -72,65 +72,45 @@ class Agent:
         ### Returns:
         `Trajectory`: the sampled episode.
         """
-        trajectory = Trajectory(self.env.observation_space.shape, self.env.spec.max_episode_steps, self.device)
+        trajectory = Trajectory(self.env.spec.max_episode_steps, self.device)
         state, done = self.env.reset(), False
         while not done:
-            action = self._choose_action(state)
-            next_state, reward, done, trunc, _ = self.env.step(action)
+            probs, value = self.model(state)
+            dist = Categorical(probs)
+            action = dist.sample()
+            next_state, reward, done, trunc, _ = self.env.step(action.item())
             done = done or trunc
-            trajectory.add(state, action, reward, next_state, done)
+            trajectory.add(dist.log_prob(action), value, reward, dist.entropy(), done)
             state = next_state
         return trajectory
 
-    def _choose_action(self, state: torch.Tensor) -> int:
-        """ Chooses an action based on the current state. """
-        with torch.no_grad(): probs, _ = self.model(state)
-        return Categorical(probs).sample().item()
-
-    def _learn(self, trajectory: Trajectory, baseline=False) -> None:
+    def _learn(self, trajectory: Trajectory, baseline=True) -> None:
         """ Learns from a trajectory using the actor-critic algorithm.
 
         ### Args:
         `Trajectory` trajectory: trajectory to learn from.
         """
 
-        S, A, R, S_, D = trajectory.unpack()
-        
-        # forward pass to get action probabilities and state values
-        P, V = self.model(S)
-        V = V.squeeze()
-
-        # get distributions from probabilities
-        dist = Categorical(P)
-
-        with torch.no_grad():
-            V_ = torch.roll(V, -1)
-            V_[-1] = 0
+        P, R, V, E, D = trajectory.unpack()
         
         G = torch.zeros(len(R), device=self.device)
-        for i in range(len(R)):
-            # slice out the next nSteps transitions
-            slc: slice = slice(i, i + self.n_steps)
-            # substitute value of last state with bootstrap value
-            _R = torch.cat((R[slc], V_[slc][-1] * (~D[slc][-1]).unsqueeze(-1)))
-            # sum of discounted rewards
-            G[i] = self._discount(_R)
+        _r = 0
+        for r in R.flip(0):
+            _r = r + self.gamma * _r
+            G = torch.cat((_r.unsqueeze(0), G[:-1]))
 
         # normalize rewards
         G = (G - G.mean()) / (G.std() + 1e-8)
-        
-        # add entropy regularization        
-        log_probs = dist.log_prob(A) + (0.1 * dist.entropy())
-    
-        # baseline subtracted for reducing variance
+        # baseline subtraction
         if baseline:
             G = G - V
-        
-        # actor gradient
-        aGrad = -log_probs * G 
-        
-        # critic gradient
-        cGrad = F.mse_loss(V, G)
+
+        # entropy regularization
+        P += 0.001 * E
+
+        aGrad = P * G
+        # critic loss
+        cGrad = F.smooth_l1_loss(V, G.detach())
 
         # backward pass
         self.optimizer.zero_grad()
@@ -141,7 +121,7 @@ class Agent:
         return
 
     def _discount(self, tensor: torch.Tensor) -> float:
-        """ Discounts the Rewards. """
+        """ Discounts the rewards. """
         assert tensor.dim() == 1, f'tensor must be 1-dimensional, got {tensor.dim()}'
         if tensor.shape[0] == self.n_steps+1:
             return (self.discounts * tensor).sum()

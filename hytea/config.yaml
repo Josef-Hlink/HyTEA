@@ -6,7 +6,7 @@ agent:
     vals: [0.9, 0.99, 0.995, 0.999]
   n_steps:
     bits: 2
-    vals: [10, 25, 50, 100]
+    vals: [1000, 1000, 1000, 1000]
 network:
   num_layers: 
     bits: 2
@@ -23,10 +23,10 @@ network:
 optimizer:
   lr:
     bits: 2
-    vals: [0.01, 0.001, 0.0001, 0.00001]
+    vals: [0.1, 0.05, 0.01, 0.005]
   lr_decay:
     bits: 2
     vals: [1, 0.99, 0.9, 0.85]
   lr_step:
     bits: 2
-    vals: [5, 10, 50, 100]
+    vals: [50, 100, 500, 1000]
