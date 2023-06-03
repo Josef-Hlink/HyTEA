@@ -13,7 +13,9 @@ class Agent:
     """ Agent that learns to play an environment using the actor-critic algorithm. """
 
     def __init__(self,
-        model: Model, optimizer: Optimizer, scheduler: StepLR, gamma: float, n_steps: int, device: torch.device
+        model: Model, optimizer: Optimizer, scheduler: StepLR,
+        gamma: float, ent_reg_weight: float, bl_sub: bool,
+        device: torch.device
     ) -> None:
         
         self.device = device
@@ -22,7 +24,8 @@ class Agent:
         self.scheduler = scheduler
         
         self.gamma = gamma
-        self.n_steps = n_steps
+        self.ent_reg_weight = ent_reg_weight
+        self.bl_sub = bl_sub
 
         self.trained = False
         self.env = None
@@ -39,7 +42,6 @@ class Agent:
         `list[float]`: history of total reward per episode.
         """
         self.env = env
-        self.discounts = torch.tensor([self.gamma**i for i in range(self.n_steps+1)]).to(self.device)
         history = []
 
         for _ in range(num_episodes):
@@ -80,7 +82,7 @@ class Agent:
             action = dist.sample()
             next_state, reward, done, trunc, _ = self.env.step(action.item())
             done = done or trunc
-            trajectory.add(dist.log_prob(action), value, reward, dist.entropy(), done)
+            trajectory.add(dist.log_prob(action), dist.entropy(), value, reward)
             state = next_state
         return trajectory
 
@@ -91,38 +93,24 @@ class Agent:
         `Trajectory` trajectory: trajectory to learn from.
         """
 
-        P, R, V, E, D = trajectory.unpack()
+        P, E, V, R = trajectory.unpack()         # get trajectory tensors
         
-        G = torch.zeros(len(R), device=self.device)
-        _r = 0
+        G, g = [], 0                             # compute returns with clever math magic
         for r in R.flip(0):
-            _r = r + self.gamma * _r
-            G = torch.cat((_r.unsqueeze(0), G[:-1]))
+            g = r + self.gamma * g
+            G.insert(0, g)
+        G = torch.tensor(G, device=self.device)  # cast to tensor
+        G = (G - G.mean()) / (G.std() + 1e-8)    # normalize
 
-        # normalize rewards
-        G = (G - G.mean()) / (G.std() + 1e-8)
-        # baseline subtraction
-        if baseline:
-            G = G - V
+        if self.bl_sub: G -= V                   # subtract baseline
+        P += self.ent_reg_weight * E             # add entropy regularization
 
-        # entropy regularization
-        P += 0.001 * E
+        al = -P * G                              # actor loss
+        cl = F.smooth_l1_loss(V, G)              # critic loss
 
-        aGrad = P * G
-        # critic loss
-        cGrad = F.smooth_l1_loss(V, G.detach())
-
-        # backward pass
         self.optimizer.zero_grad()
-        (aGrad.sum() + cGrad).backward()
+        (al + cl).sum().backward()               # backprop
         self.optimizer.step()
         self.scheduler.step()
 
         return
-
-    def _discount(self, tensor: torch.Tensor) -> float:
-        """ Discounts the rewards. """
-        assert tensor.dim() == 1, f'tensor must be 1-dimensional, got {tensor.dim()}'
-        if tensor.shape[0] == self.n_steps+1:
-            return (self.discounts * tensor).sum()
-        return (self.discounts[:tensor.shape[0]] * tensor).sum().item()

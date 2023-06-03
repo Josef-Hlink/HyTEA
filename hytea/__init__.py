@@ -1,3 +1,3 @@
-from .agent2 import Agent
+from .agent import Agent
 from .model import Model
 from .environment import Environment

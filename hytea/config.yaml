@@ -4,29 +4,42 @@ agent:
   gamma:
     bits: 2
     vals: [0.9, 0.99, 0.995, 0.999]
-  n_steps:
+    default: 0.99
+  ent_reg_weight:
     bits: 2
-    vals: [1000, 1000, 1000, 1000]
+    vals: [0.0001, 0.001, 0.01, 0.1]
+    default: 0.001
+  bl_sub:
+    bits: 1
+    vals: [True, False]
+    default: True
 network:
   num_layers: 
     bits: 2
     vals: [1, 2, 3, 4]
-  dropout_rate: 
+    default: 1
+  dropout_rate:
     bits: 2
     vals: [0.01, 0.1, 0.2, 0.3]
+    default: 0.1
   hidden_size:
     bits: 2
     vals: [32, 64, 128, 256]
+    default: 64
   hidden_activation:
     bits: 1
     vals: [relu, sigmoid]
+    default: relu
 optimizer:
   lr:
     bits: 2
     vals: [0.1, 0.05, 0.01, 0.005]
+    default: 0.01
   lr_decay:
     bits: 2
     vals: [1, 0.99, 0.9, 0.85]
+    default: 0.99
   lr_step:
     bits: 2
     vals: [50, 100, 500, 1000]
+    default: 100

@@ -81,7 +81,8 @@ class FitnessFunction:
             optimizer = optimizer,
             scheduler = scheduler,
             gamma = config.agent.gamma,
-            n_steps = config.agent.n_steps,
+            ent_reg_weight = config.agent.ent_reg_weight,
+            bl_sub = config.agent.bl_sub,
             device = self.device
         )
 
