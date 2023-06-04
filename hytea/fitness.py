@@ -56,8 +56,12 @@ class FitnessFunction:
     def evaluate_single(self, config: DotDict, group_name: str, job_type_name: str) -> float:
         """ Helper (one run) """
         if self.args.use_wandb:
-            config.update(**self.args, group_name=group_name, job_type=job_type_name)
+            # config.update(**self.args, group_name=group_name, job_type=job_type_name)
             logger = WandbLogger(
+                project_name=self.args.project_name,
+                wandb_team=self.args.wandb_team,
+                group_name=group_name,
+                job_type=job_type_name,
                 config = config,
             )
         env = Environment(env_name=self.env_name, device=self.device)
@@ -97,7 +101,6 @@ class FitnessFunction:
         
         if self.args.use_wandb: 
             logger.update_summary({'test_reward': test_reward})
-            logger.commit()
             logger.finish()
         
         return test_reward

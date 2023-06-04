@@ -14,13 +14,12 @@ class WandbLogger:
     ### Args:
     `DotDict` config: full configuration of the experiment.
     """	
-    def __init__(self, config: DotDict) -> None:
-        self.config = config
+    def __init__(self, project_name: str, wandb_team: str, group_name: str, job_type: str, config: DotDict) -> None:
         self.run = wandb.init(
-            project = config.project_name,
-            entity = config.wandb_team,
-            group = config.group_name,
-            job_type = config.job_type,
+            project = project_name,
+            entity = wandb_team,
+            group = group_name,
+            job_type = job_type,
             config = config,
             reinit = True,
             monitor_gym = False,
@@ -48,7 +47,8 @@ class WandbLogger:
         return
     
     def finish(self) -> bool:
-        """ Finish wandb run. """	
+        """ Finish wandb run. """
+        self.commit()	
         return self.run.finish()
 
 
