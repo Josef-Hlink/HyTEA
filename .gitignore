@@ -4,6 +4,5 @@ __pycache__
 hytea.egg-info
 
 # general
-docs/report
 .vscode
 wandb

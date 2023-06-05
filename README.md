@@ -54,7 +54,6 @@ hytea decode  # decodes a given hyperparameter string
 
 ## List of supported environments
 
-- [x] MountainCar-v0
 - [x] CartPole-v1
 - [x] Acrobot-v1
 - [x] LunarLander-v2
