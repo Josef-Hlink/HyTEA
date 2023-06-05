@@ -65,9 +65,9 @@
 \label{ssec:ac}
 
 \TODO{
-    We do AC and A2C.
+    We do A2C.
     Pseudo-code and equations.
-    Explain methods: 2-headed neural network, entropy regularization, advantage estimation.
+    Explain methods: 2-headed neural network, entropy regularization, baseline subtraction, advantage estimation (calculating returns).
     Mention that these params will be tuned using EA.
 }
 
@@ -86,7 +86,7 @@ We don't use this paper, but it's just to show that the citations work \cite{han
             \STATE Under policy $\pi_\theta$,
             \STATE sample episode $s_0, a_0, r_1, \dots, s_{T-1}, a_{T-1}, r_T$
             \STATE \texttt{G} $\gets$ discounted returns using equation \ref{eq:disc-ret}
-            \IF {using advantage estimation}
+            \IF {baseline subtraction}
                 \STATE \texttt{G} $\gets$ \texttt{G} - \texttt{V}
             \ELSE
                 \STATE \texttt{G} $\gets$ \texttt{G}
