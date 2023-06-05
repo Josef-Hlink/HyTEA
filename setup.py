@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = 'hytea',
-    version = '0.1.0',
+    version = '0.9.0',
     description = 'Hyperparameter Tuning using Evolutionary Algorithms',
     author = 'Josef Hamelink & Shreyansh Sharma',
     packages = find_packages(),
