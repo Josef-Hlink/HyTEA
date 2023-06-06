@@ -70,46 +70,67 @@ In this study, we aim to investigate the impact of our genetic algorithm-based H
 \TODO{small intro for this section.}
 
 % -------------------------------------------------------------------
-\subsection{Actor-Critic}
-\label{ssec:ac}
-
-\TODO{
-    We do A2C.
-    Pseudo-code and equations.
-    Explain methods: 2-headed neural network, entropy regularization, baseline subtraction, advantage estimation (calculating returns).
-    Mention that these params will be tuned using EA.
-}
-
-We don't use this paper, but it's just to show that the citations work \cite{han2020actorcritic}.
-
-% EXAMPLE ALGORITHM
-\begin{algorithm}[htbp]
-    \caption{Actor-Critic}
-    \label{alg:trunk}
-    \begin{algorithmic}[1]
-        \STATE {\bfseries Input:} environment, $\pi_\theta$, $V_\phi$
-        \STATE \texttt{$\pi_\theta$} $\gets$ random values
-        \STATE \texttt{$V_\phi$} $\gets$ random values
-        
-        \WHILE {not converged}
-            \STATE Under policy $\pi_\theta$,
-            \STATE sample episode $s_0, a_0, r_1, \dots, s_{T-1}, a_{T-1}, r_T$
-            \STATE \texttt{G} $\gets$ discounted returns using equation \ref{eq:disc-ret}
-            \IF {baseline subtraction}
-                \STATE \texttt{G} $\gets$ \texttt{G} - \texttt{V}
-            \ELSE
-                \STATE \texttt{G} $\gets$ \texttt{G}
-            \ENDIF
-            \STATE Update $\pi_\theta$ and $V_\phi$ using \texttt{G}
-        \ENDWHILE
-    \end{algorithmic}
+\subsection{Advantage Actor-Critic (A2C) Algorithm}
+The Advantage Actor-Critic (A2C) algorithm is a policy gradient-based reinforcement learning method. It uses a two-headed neural network to simultaneously estimate the policy (actor) and value function (critic) to improve the agent's performance. In this section, we describe the A2C algorithm and which corresponding hyperparameters we intend to tune using a Genetic Algorithm (GA).
+\begin{algorithm}[H]
+  \caption{A2C Algorithm}
+  \label{alg:a2c}
+  \begin{algorithmic}[1]
+    \STATE Initialize neural network parameters $\theta$
+    \STATE Initialize empty experience buffer $D$
+    \STATE Initialize step counter $t \gets 0$
+    
+    \WHILE{not converged}
+      \STATE Reset environment to obtain initial state $s$
+      \STATE Initialize empty trajectory buffer
+      
+      \WHILE{not end of episode}
+        \STATE Select action $a$ based on the policy $\pi(a|s;\theta)$
+        \STATE Execute action $a$, observe next state $s'$ and reward $r$
+        \STATE Store transition $(s, a, r, s')$ in trajectory buffer
+        \STATE $t \gets t + 1$
+        \STATE $s \gets s'$
+      \ENDWHILE
+      
+      \STATE Calculate returns $R$ for each step in the trajectory buffer
+      \STATE Calculate advantages $A(s,a)$ for each step in the trajectory buffer
+      
+      \STATE Update actor parameters by maximizing the objective:
+      \[
+        \theta \gets \theta + \alpha \nabla_\theta \left( \log(\pi(a|s;\theta)) \cdot A(s,a) - \beta \cdot \mathcal{H}(\pi(s;\theta)) \right)
+      \]
+      
+      \STATE Update critic parameters by minimizing the mean squared error:
+      \[
+        \theta' \gets \theta' + \beta \nabla_{\theta'} \left( V(s) - R \right)^2
+      \]
+      
+      \STATE Update the target value function $V(s)$
+      \STATE Update the parameters $\theta$ and $\theta'$ of the neural network
+      
+    \ENDWHILE
+  \end{algorithmic}
 \end{algorithm}
 
-% EXAMPLE EQUATION
-\begin{equation}
-    \label{eq:disc-ret}
-    G_t = \sum_{k=0}^{\infty} \gamma^k r_{t+k+1}
-\end{equation}
+\subsubsection{Two-Headed Neural Network}
+The Advantage Actor-Critic (A2C) and Actor-Critic (AC) algorithms both use a two-headed neural network architecture, consisting of an actor head and a critic head. However, in AC algorithms, the actor and critic are updated asynchronously. While A2C introduces synchronous updates of the two heads, with the goal of mitigating potential instabilities associated with asynchronous updates. In A2C, the two heads are updated simultaneously using a single neural network. The actor head provides the action probabilities, and the critic head estimates the state-value function. The training of both heads is performed using the advantage function, which calculates the advantage of taking a specific action compared to the average action value in the state. 
+
+
+\subsubsection{Entropy Regularization}
+
+The agent's policy is a probability distribution over all possible actions in the current state. Higher entropy in this distribution causes more randomness in the action selection. Using entropy regularization in the A2C algorithm thus encourages exploration to prevent the agent from getting stuck in suboptimal solutions. In the objective function of A2C below we can see that the amount of entropy regularization is controlled by hyperparameter $\beta.$ By tuning this $\beta$ we can influence the agent's balance between exploration and exploitation and optimize its performance.
+
+\[
+\mathcal{J}(\theta) = \sum_{t} \left( \log(\pi(a_t|s_t)) \cdot A(s_t, a_t) - \beta \cdot \mathcal{H}(\pi(s_t)) \right)
+\]
+The objective function consists of three parts: the log probability of the selected action $( \log(\pi(a_t|s_t))$, the advantage function $A(s_t, a_t)$, and the entropy regularization term $\mathcal{H}(\pi(s_t))$weighted by hyperparameter $\beta$
+
+\subsubsection{Baseline Subtraction}
+Baseline subtraction is a technique used to reduce the variance of the policy gradient estimates during training. It involves subtracting a baseline value from the estimated returns or advantages before updating the policy. For our HPO algorithm, we will have encoded baseline subtraction with a single bit, 1 means the A2C agent will use baseline subtraction, and 0 means no baseline subtraction.
+
+\subsubsection{Advantage Estimation (Calculating Returns)}
+The A2C algorithm utilizes advantage estimation to approximate the advantage function. This function gives the advantage of taking a specific action in a given state compared to the average value of actions in that state. The advantage is calculated by subtracting the estimated state-value function (critic's output) from the observed returns obtained during the interaction with the environment. The returns are computed as the sum of discounted future rewards.  The discount factor is another hyperparameter we will try to optimize, for it we will try four values: 0.9, 0.99, 0.995, and 0.999.
+
 
 % -------------------------------------------------------------------
 \subsection{Evolutionary Algorithm} \label{ssec:EA}
