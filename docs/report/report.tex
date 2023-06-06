@@ -50,8 +50,17 @@
 % -------------------------------------------------------------------
 \section{Introduction}
 \label{sec:intro}
-
-\TODO{RL is tough bc HPO, so we do EA to automate HPO. We test using gym envs. Our agent is A2C.}
+Hyperparameter tuning is an active research topic in machine learning that can have a significant impact on the performance of models. 
+The process of manually fine-tuning hyperparameters can be time-consuming. 
+In this study, we propose the use of a genetic algorithm as a means to optimize the hyperparameters of an Advantage Actor-Critic (A2C) agent. 
+This includes the hyperparameters of the neural network the agent uses such as the number of layers, the number of neurons per layer, the activation functions employed, and the learning rate. Furthermore, hyperparameters of the A2C agent such as the discount factor, Entropy Regularization, and baseline subtraction. 
+We aim to automate the exploration of various hyperparameter settings using a genetic algorithm, with the goal of finding an optimal combination. 
+We use a bitstring representation to encode and manipulate the hyperparameter configuration. 
+Each bit or set of bits within the string corresponds to a specific hyperparameter setting, allowing for easy manipulation by the genetic algorithm's evolutionary process. 
+Similar to the process of natural selection and genetics, the genetic algorithm starts with an initial population of bitstrings and iteratively tries to improve them with the goal of finding an optimal configuration of hyperparameters. 
+To evaluate the performance and effectiveness of our Hyperparameter Optimization (HPO) algorithm for the A2C agent, we apply the agent on three of OpenAI's Gym environments: CartPole-v1, Acrobot-v1, and LunarLander-v2. 
+These environments provide varying sizes of action and observation spaces, enabling a more generalized assessment of the HPO algorithm's performance.
+In this study, we aim to investigate the impact of our genetic algorithm-based HPO approach on the performance and convergence speed of the A2C agent in various Gym environments. 
 
 % -------------------------------------------------------------------
 % -------------------------------------------------------------------
