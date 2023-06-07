@@ -71,10 +71,15 @@ In this study, we aim to investigate the impact of our genetic algorithm-based H
 
 % -------------------------------------------------------------------
 \subsection{Advantage Actor-Critic (A2C) Algorithm}
-The Advantage Actor-Critic (A2C) algorithm is a policy gradient-based reinforcement learning method. It uses a two-headed neural network to simultaneously estimate the policy (actor) and value function (critic) to improve the agent's performance. In this section, we describe the A2C algorithm and which corresponding hyperparameters we intend to tune using a Genetic Algorithm (GA).
+\label{ssec:A2C}
+
+The Advantage Actor-Critic (A2C) algorithm is a policy gradient-based reinforcement learning method.
+It uses a two-headed neural network to simultaneously estimate the policy (actor) and value function (critic) to improve the agent's performance.
+In this section, we describe the A2C algorithm and which corresponding hyperparameters we intend to tune using a Genetic Algorithm (GA).
+
 \begin{algorithm}[H]
   \caption{A2C Algorithm}
-  \label{alg:a2c}
+  \label{alg:A2C}
   \begin{algorithmic}[1]
     \STATE Initialize neural network parameters $\theta$
     \STATE Initialize empty experience buffer $D$
@@ -108,37 +113,64 @@ The Advantage Actor-Critic (A2C) algorithm is a policy gradient-based reinforcem
       \STATE Update the target value function $V(s)$
       \STATE Update the parameters $\theta$ and $\theta'$ of the neural network
       
-    \ENDWHILE
-  \end{algorithmic}
+      \ENDWHILE
+    \end{algorithmic}
 \end{algorithm}
 
+% -------------------------------------------------------------------
 \subsubsection{Two-Headed Neural Network}
-The Advantage Actor-Critic (A2C) and Actor-Critic (AC) algorithms both use a two-headed neural network architecture, consisting of an actor head and a critic head. However, in AC algorithms, the actor and critic are updated asynchronously. While A2C introduces synchronous updates of the two heads, with the goal of mitigating potential instabilities associated with asynchronous updates. In A2C, the two heads are updated simultaneously using a single neural network. The actor head provides the action probabilities, and the critic head estimates the state-value function. The training of both heads is performed using the advantage function, which calculates the advantage of taking a specific action compared to the average action value in the state. 
+\label{sssec:2hnn}
 
+The Advantage Actor-Critic (A2C) and Actor-Critic (AC) algorithms both use a two-headed neural network architecture, consisting of an actor head and a critic head.
+However, in AC algorithms, the actor and critic are updated asynchronously.
+While A2C introduces synchronous updates of the two heads, with the goal of mitigating potential instabilities associated with asynchronous updates.
+In A2C, the two heads are updated simultaneously using a single neural network.
+The actor head provides the action probabilities, and the critic head estimates the state-value function.
+The training of both heads is performed using the advantage function, which calculates the advantage of taking a specific action compared to the average action value in the state.
 
+% -------------------------------------------------------------------
 \subsubsection{Entropy Regularization}
+\label{sssec:entreg}
 
-The agent's policy is a probability distribution over all possible actions in the current state. Higher entropy in this distribution causes more randomness in the action selection. Using entropy regularization in the A2C algorithm thus encourages exploration to prevent the agent from getting stuck in suboptimal solutions. In the objective function of A2C below we can see that the amount of entropy regularization is controlled by hyperparameter $\beta.$ By tuning this $\beta$ we can influence the agent's balance between exploration and exploitation and optimize its performance.
+The agent's policy is a probability distribution over all possible actions in the current state.
+Higher entropy in this distribution causes more randomness in the action selection.
+Using entropy regularization in the A2C algorithm thus encourages exploration to prevent the agent from getting stuck in suboptimal solutions.
+In the objective function of A2C below we can see that the amount of entropy regularization is controlled by hyperparameter $\beta$.
+By tuning this $\beta$ we can influence the agent's balance between exploration and exploitation and optimize its performance.
 
 \[
 \mathcal{J}(\theta) = \sum_{t} \left( \log(\pi(a_t|s_t)) \cdot A(s_t, a_t) - \beta \cdot \mathcal{H}(\pi(s_t)) \right)
 \]
-The objective function consists of three parts: the log probability of the selected action $( \log(\pi(a_t|s_t))$, the advantage function $A(s_t, a_t)$, and the entropy regularization term $\mathcal{H}(\pi(s_t))$weighted by hyperparameter $\beta$
+The objective function consists of three parts: the log probability of the selected action $\log(\pi(a_t|s_t))$, the advantage function $A(s_t, a_t)$, and the entropy regularization term $\mathcal{H}(\pi(s_t))$weighted by hyperparameter $\beta$
 
 \subsubsection{Baseline Subtraction}
-Baseline subtraction is a technique used to reduce the variance of the policy gradient estimates during training. It involves subtracting a baseline value from the estimated returns or advantages before updating the policy. For our HPO algorithm, we will have encoded baseline subtraction with a single bit, 1 means the A2C agent will use baseline subtraction, and 0 means no baseline subtraction.
+\label{sssec:blsub}
+
+Baseline subtraction is a technique used to reduce the variance of the policy gradient estimates during training.
+It involves subtracting a baseline value from the estimated returns or advantages before updating the policy.
+For our HPO algorithm, we will have encoded baseline subtraction with a single bit, 1 means the A2C agent will use baseline subtraction, and 0 means no baseline subtraction.
 
 \subsubsection{Advantage Estimation (Calculating Returns)}
-The A2C algorithm utilizes advantage estimation to approximate the advantage function. This function gives the advantage of taking a specific action in a given state compared to the average value of actions in that state. The advantage is calculated by subtracting the estimated state-value function (critic's output) from the observed returns obtained during the interaction with the environment. The returns are computed as the sum of discounted future rewards.  The discount factor is another hyperparameter we will try to optimize, for it we will try four values: 0.9, 0.99, 0.995, and 0.999.
+\label{sssec:advest}
+
+The A2C algorithm utilizes advantage estimation to approximate the advantage function.
+This function gives the advantage of taking a specific action in a given state compared to the average value of actions in that state.
+The advantage is calculated by subtracting the estimated state-value function (critic's output) from the observed returns obtained during the interaction with the environment.
+The returns are computed as the sum of discounted future rewards. 
+The discount factor is another hyperparameter we will try to optimize, for it we will try four values: 0.9, 0.99, 0.995, and 0.999.
 
 
 % -------------------------------------------------------------------
-\subsection{Evolutionary Algorithm} \label{ssec:EA}
+\subsection{Evolutionary Algorithm}
+\label{ssec:EA}
+
 \TODO{
     Maybe add some figures of crossover and stuff, but I'm not sure if that's necessary.
 }
 
-The hyperparameter configuration for the Actor-Critic network will be optimized using an Evolutionary Algorithm (EA) \cite{Simon2013EvolutionaryOA}. EA is a metaheuristic population-based algorithm that is inspired by biological evolution. Pseudocode for EA is presented in Algorithm \ref{alg:EA}.
+The hyperparameter configuration for the Actor-Critic network will be optimized using an Evolutionary Algorithm (EA) \cite{Simon2013EvolutionaryOA}.
+EA is a metaheuristic population-based algorithm that is inspired by biological evolution.
+Pseudocode for EA is presented in Algorithm \ref{alg:EA}.
 
 \begin{algorithm}[htbp]
     \caption{Evolutionary Algorithm}
@@ -162,15 +194,34 @@ The hyperparameter configuration for the Actor-Critic network will be optimized 
 \end{algorithm}
 
 
-The initial population is generated randomly. After the population is created, the individuals are evaluated, in this case by using the hyperparameters corresponding to the individual to train the actor-critic network and evaluating it as described in section \ref{ssec:ac}. The resulting performence is called the individual's fitness value. 
+The initial population is generated randomly.
+After the population is created, the individuals are evaluated, in this case by using the hyperparameters corresponding to the individual to train the actor-critic network and evaluating it as described in section \ref{ssec:A2C}.
+The resulting performance is called the individual's fitness value. 
 
-Using the fitness values we select a subset $\mu$ of the population to reproduce, similar to how only fit individuals in a population in nature are able to find a mate. Selection is done greedily, which does not allow for any exploration of the search space and makes it is rather likely that the algorithm gets stuck in local minima. The greedy approach was chosen because of limited training resources. While the minimum found by a greedy approach might not be the best, it is found and explored quickly, allowing for a good proof of concept result. 
+Using the fitness values we select a subset $\mu$ of the population to reproduce, similar to how only fit individuals in a population in nature are able to find a mate.
+Selection is done greedily, which does not allow for any exploration of the search space and makes it is rather likely that the algorithm gets stuck in local minima.
+The greedy approach was chosen because of limited training resources.
+While the minimum found by a greedy approach might not be the best, it is found and explored quickly, allowing for a good proof of concept result.
 
-The selected individuals reproduce via a process known as crossover. Biologically, this refers to the crossing of chromosomes, leading to two new chromosomes that have part of the DNA of one parent, and part of the other. The algorithmic implementation of this process is very similar; take two selected parents and choose a random index where crossover occurs. One offspring gets the first part of parent 1 and the second part of parent 2, and another offspring gets the inverse. As such, each pair of two parents also creates two offspring. This process repeats until the set of offspring, named $\lambda$, is of the desired size. 
+The selected individuals reproduce via a process known as crossover.
+Biologically, this refers to the crossing of chromosomes, leading to two new chromosomes that have part of the DNA of one parent, and part of the other.
+The algorithmic implementation of this process is very similar; take two selected parents and choose a random index where crossover occurs.
+One offspring gets the first part of parent 1 and the second part of parent 2, and another offspring gets the inverse.
+As such, each pair of two parents also creates two offspring.
+This process repeats until the set of offspring, named $\lambda$, is of the desired size. 
 
-In nature each generation consists of only offspring. Parents continue to age, no matter how fit they are, and eventually become infertile and die. This is called a $(\mu, \lambda)$ process, where the parents are replaced by the offspring. Computer scientists have the luxury that the individuals do not age, so fit parents can be kept as long as is needed. This allows for a $(\mu+\lambda)$ algorithm, which is the form used in this paper. By allowing individuals to survive as long as they are fit enough, the algorithm can converge on a solution quicker. However, similar to the selection process, this sacrifices the ability to explore the search space. 
+In nature each generation consists of only offspring.
+Parents continue to age, no matter how fit they are, and eventually become infertile and die.
+This is called a $(\mu, \lambda)$ process, where the parents are replaced by the offspring.
+Computer scientists have the luxury that the individuals do not age, so fit parents can be kept as long as is needed.
+This allows for a $(\mu+\lambda)$ algorithm, which is the form used in this paper.
+By allowing individuals to survive as long as they are fit enough, the algorithm can converge on a solution quicker. However, similar to the selection process, this sacrifices the ability to explore the search space. 
 
-After creating offspring using crossover, the final step is mutation. In nature, genes can randomly be mutated through accidents during the replicating process or exposure to radiation. Generally, this is the main source of variation in biological populations. This project makes use of uniform mutation, where each bit of each individual has a small chance of being flipped. Mutation is the final step in creating a new generation, which can now be evaluated and go through the full process again. 
+After creating offspring using crossover, the final step is mutation.
+In nature, genes can randomly be mutated through accidents during the replicating process or exposure to radiation.
+Generally, this is the main source of variation in biological populations.
+This project makes use of uniform mutation, where each bit of each individual has a small chance of being flipped.
+Mutation is the final step in creating a new generation, which can now be evaluated and go through the full process again.
 
 % EXAMPLE TABLE
 \begin{table}[htbp]
