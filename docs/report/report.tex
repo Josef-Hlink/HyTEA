@@ -77,45 +77,6 @@ The Advantage Actor-Critic (A2C) algorithm is a policy gradient-based reinforcem
 It uses a two-headed neural network to simultaneously estimate the policy (actor) and value function (critic) to improve the agent's performance.
 In this section, we describe the A2C algorithm and which corresponding hyperparameters we intend to tune using a Genetic Algorithm (GA).
 
-\begin{algorithm}[H]
-  \caption{A2C Algorithm}
-  \label{alg:A2C}
-  \begin{algorithmic}[1]
-    \STATE Initialize neural network parameters $\theta$
-    \STATE Initialize empty experience buffer $D$
-    \STATE Initialize step counter $t \gets 0$
-    
-    \WHILE{not converged}
-      \STATE Reset environment to obtain initial state $s$
-      \STATE Initialize empty trajectory buffer
-      
-      \WHILE{not end of episode}
-        \STATE Select action $a$ based on the policy $\pi(a|s;\theta)$
-        \STATE Execute action $a$, observe next state $s'$ and reward $r$
-        \STATE Store transition $(s, a, r, s')$ in trajectory buffer
-        \STATE $t \gets t + 1$
-        \STATE $s \gets s'$
-      \ENDWHILE
-      
-      \STATE Calculate returns $R$ for each step in the trajectory buffer
-      \STATE Calculate advantages $A(s,a)$ for each step in the trajectory buffer
-      
-      \STATE Update actor parameters by maximizing the objective:
-      \[
-        \theta \gets \theta + \alpha \nabla_\theta \left( \log(\pi(a|s;\theta)) \cdot A(s,a) - \beta \cdot \mathcal{H}(\pi(s;\theta)) \right)
-      \]
-      
-      \STATE Update critic parameters by minimizing the mean squared error:
-      \[
-        \theta' \gets \theta' + \beta \nabla_{\theta'} \left( V(s) - R \right)^2
-      \]
-      
-      \STATE Update the target value function $V(s)$
-      \STATE Update the parameters $\theta$ and $\theta'$ of the neural network
-      
-      \ENDWHILE
-    \end{algorithmic}
-\end{algorithm}
 
 % -------------------------------------------------------------------
 \subsubsection{Two-Headed Neural Network}
@@ -127,6 +88,39 @@ While A2C introduces synchronous updates of the two heads, with the goal of miti
 In A2C, the two heads are updated simultaneously using a single neural network.
 The actor head provides the action probabilities, and the critic head estimates the state-value function.
 The training of both heads is performed using the advantage function, which calculates the advantage of taking a specific action compared to the average action value in the state.
+
+\begin{algorithm}[H]
+    \caption{A2C Algorithm with Baseline Subtraction and Entropy Regularization}
+    \label{alg:A2C}
+      \begin{algorithmic}[1]
+      \REQUIRE Number of episodes $N$, learning rate $\alpha$, discount factor $\gamma$
+      \STATE Initialize Actor $\pi(s, a; \theta)$ and Critic $V(s; \omega)$ network.
+      \FOR{\textbf{Episode} $= 1$ to $N$}
+          \STATE Initialize state $s$
+      
+          \WHILE{\textbf{Episode} not finished}
+              \STATE Select action $a$ from the actor network with state $s$
+              \STATE Execute action $a$ and observe next state $s'$ and reward $r$
+              
+              \STATE Calculate estimated value $V(s; \omega)$
+              \STATE Calculate advantage $A = r + \gamma V(s'; \omega) - V(s; \omega)$
+              
+              \STATE Update the critic network by minimizing the mean squared error loss:
+              \STATE $\quad \mathcal{L}_{\textbf{CRITIC}} = (r + \gamma V(s'; \omega) - V(s; \omega))^2$
+              
+              \STATE Update the actor network using the advantage as the policy gradient, with baseline subtraction:
+              \STATE $\quad \mathcal{L}_{\textbf{ACTOR}} = -\log \pi(a|s; \theta) \cdot (A - V(s; \omega))$
+              
+              \STATE Calculate the entropy of the actor's distribution:
+              \STATE $\quad \text{Entropy} = -\sum_{a} \pi(a|s; \theta) \log \pi(a|s; \theta)$
+              
+              \STATE Update both networks using gradient descent
+              
+              \STATE Update state $s$ to $s'$
+          \ENDWHILE
+      \ENDFOR
+  \end{algorithmic}
+  \end{algorithm}
 
 % -------------------------------------------------------------------
 \subsubsection{Entropy Regularization}
