@@ -246,12 +246,51 @@ Mutation is the final step in creating a new generation, which can now be evalua
 \section{Experiments}
 \label{sec:exp}
 
-\TODO{
-    List environments: CartPole, Acrobot, LunarLander.
-    Explain why these environments were chosen (discrete action space, no input that needs conv layers).
-    List bitstring makeup: what values for what params.
-    Don't mention results yet.
-}
+In order to test the effectiveness of the hyperparameter optimization algorithm, we will use it to optimize the hyperparameters of the A2C algorithm for three different environments: CartPole, Acrobot, and LunarLander.
+In Cartpole, the algorithm is presented with a cart on a frictionless track has to balance a pole atop itself. 
+A state consists of four continuous variables: Cart position, cart velocity, pole angle and pole angular velocity. 
+The action space consists of a single discrete variable that represents a constant force being applied to the left or right of the cart, or not at all. 
+Acrobot is a similar environment, where two linked poles hang from a fixed points. 
+By applying force onto the link between the poles, the agent has to swing the free end of the chain above a height treshold. 
+The action space consists of a single discrete variable that represents a constant force being applied to the chain. 
+The state space contains six continuous variables: the sine, cosine and angular velocity of the two angles that define the orientation of the chain. 
+Lunar Lander is an environment where a moonlander is descending to the moon, and the agent has to control engines to allow it to land safely. 
+The action space is a discrete variable the represents firing one of the three engines, or doing nothing. 
+The state space contains six continuous and two discrete variables: The coordinates of the lander, its linear velocities, its angle, its angular velocity, and two booleans that represent whether each leg is in contact with the ground or not.
+
+Each of these environments is relatively simple for the agent to solve, allowing for the experiments to reach results over limited training resources. 
+In addition, they all have discrete action spaces and relatively simple state spaces that do not require convolutional layers.
+
+In total, eleven hyperparameters will be optimized as shown in Table \ref{tab:optimized_parameters}. 
+The Evolutionary Algorithm is designed to optimize a bitstring, therefore each hyperparameter was assigned a discrete search space of either two or four possible option. 
+This makes it easy to decode the bitstring into a hyperparameter configuration for the actor-critic network. 
+
+\begin{table}[htbp]
+    \centering
+    \begin{tabular}
+        {|c|c|}
+        \toprule
+        \textbf{Parameter} & \textbf{Search Space} \\
+        \midrule
+        Discount factor & [0.9, 0.99, 0.995, 0.999] \\
+        Entropy Regularization weight & [0.0001, 0.001, 0.01, 0.1] \\
+        Baseline Subtraction & [True, False] \\
+        \midrule
+        Number of hidden layers & [1, 2, 3, 4] \\
+        Dropout rate & [0.01, 0.1, 0.2, 0.3] \\
+        Hidden layer size & [32, 64, 128, 256] \\
+        Hidden layer activation & [ReLU, Sigmoid] \\
+        \midrule
+        Learning rate & [0.1, 0.05, 0.01, 0.005] \\
+        Learning rate decay & [1, 0.99, 0.9, 0.85] \\
+        Learning rate step & [50, 100, 500, 1000] \\
+        \bottomrule
+    \end{tabular}
+    \caption{Hyperparameters to be optimized by the Evolutionary Algorithm and their discrete search space. }
+    \label{tab:optimized_parameters}
+\end{table}
+
+
 
 % -------------------------------------------------------------------
 % -------------------------------------------------------------------
