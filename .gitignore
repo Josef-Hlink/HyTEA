@@ -6,6 +6,7 @@ hytea.egg-info
 # general
 .vscode
 wandb
+results
 
 build/
 dist/
