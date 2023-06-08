@@ -91,36 +91,36 @@ The training of both heads is performed using the advantage function, which calc
 
 \begin{algorithm}[H]
     \caption{A2C Algorithm with Baseline Subtraction and Entropy Regularization}
-    \label{alg:A2C}
-      \begin{algorithmic}[1]
+  \label{alg:A2C}
+  \begin{algorithmic}[1]
       \REQUIRE Number of episodes $N$, learning rate $\alpha$, discount factor $\gamma$
       \STATE Initialize Actor $\pi(s, a; \theta)$ and Critic $V(s; \omega)$ network.
       \FOR{\textbf{Episode} $= 1$ to $N$}
           \STATE Initialize state $s$
-      
+    
           \WHILE{\textbf{Episode} not finished}
               \STATE Select action $a$ from the actor network with state $s$
               \STATE Execute action $a$ and observe next state $s'$ and reward $r$
-              
+      
               \STATE Calculate estimated value $V(s; \omega)$
               \STATE Calculate advantage $A = r + \gamma V(s'; \omega) - V(s; \omega)$
-              
+      
               \STATE Update the critic network by minimizing the mean squared error loss:
               \STATE $\quad \mathcal{L}_{\textbf{CRITIC}} = (r + \gamma V(s'; \omega) - V(s; \omega))^2$
-              
+      
               \STATE Update the actor network using the advantage as the policy gradient, with baseline subtraction:
               \STATE $\quad \mathcal{L}_{\textbf{ACTOR}} = -\log \pi(a|s; \theta) \cdot (A - V(s; \omega))$
-              
+      
               \STATE Calculate the entropy of the actor's distribution:
               \STATE $\quad \text{Entropy} = -\sum_{a} \pi(a|s; \theta) \log \pi(a|s; \theta)$
-              
+      
               \STATE Update both networks using gradient descent
-              
+      
               \STATE Update state $s$ to $s'$
-          \ENDWHILE
+      \ENDWHILE
       \ENDFOR
-  \end{algorithmic}
-  \end{algorithm}
+    \end{algorithmic}
+\end{algorithm}
 
 % -------------------------------------------------------------------
 \subsubsection{Entropy Regularization}
@@ -367,6 +367,21 @@ The mean reward of the three configurations was then used as the evaluation metr
 
 \section{Discussion}
 \label{sec:disc}
+
+While carrying out this research, we came across a number of ways it could be improved or expanded upon. In this section, we will discuss these topics. 
+
+One of the main probelms we encountered during this project is amount of resources it takes to optimize the parameters. Each candidate configuration produced by the evolutionary algorithm needs to be fully trained on an environment, preferably multiple times to reduce variance. 
+To be able to carry out the project some compromises had to be made to reduce the resource costs. 
+
+The first place we made these compromises is the evolutionary algorithm, where we put a very strong emphasis on exploiting the population and sacrificed exploration. Exploration is important in optimization problems when the search space contains multiple local minima. 
+With such strong focus on exploitation, the algorithm will converge on the local minimum closest to its initial conditions, without any guarantee that this is a good minimum. Exploration allows the algorithm to escape weak minima and converge onto stronger ones. 
+Given our limited resources, finding any local minimum is considered a good proof of concept result. If this method were to be used in practice, it would be beneficial to change some parts of the EA to focus more on exploration.
+For example, deterministic selection could be replaced with tournament selection, which selects each individual by randomly selecting a pool of candidates and adding the best one to the offspring pool. This allows for bad candidates to be filtered out without always choosing the absolute best ones. 
+
+The resource cost was also reduced by severely limiting the search space for the A2C parameters. Each parameter was discretized to have two or four options, so that we could encode them in one or two bits for the EA. 
+This means that the optimal value for each parameter will only be approximated. It also means that some interesting configurations will not be considered. For example, there is only a single parameter for the number of nodes in the hidden layers. Many modern architectures are not so simple and instead layers tend to increase or decrease in size as we proceed further into the network. 
+When repeating this project with more resources there should be more options for the discrete variables and extra variables for neural architecture. In addition, an genetic algorithm capable of working with continuous variables such as Differential Evolution \cite{DifferentialEvolution} could be used.  
+
 
 \TODO{
     What could be improved?
