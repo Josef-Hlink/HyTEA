@@ -290,7 +290,10 @@ This makes it easy to decode the bitstring into a hyperparameter configuration f
     \label{tab:optimized_parameters}
 \end{table}
 
-
+\TODO{Replace the default values by the ones we actually used}
+For each environment, the Evolutionary Algorithm was given a population size of four individuals and was optimized for five generations. 
+Each hyperparameter configuration was trained three seperate times. Every instance was trained for 1000 episodes and evaluated for 100 episodes.
+The mean reward of the three configurations was then used as the evaluation metric and fitness function.   
 
 % -------------------------------------------------------------------
 % -------------------------------------------------------------------
