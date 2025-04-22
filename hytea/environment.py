@@ -9,7 +9,7 @@ class Environment:
         assert env_name in  [
             'CartPole-v1',
             'Acrobot-v1',
-            'LunarLander-v2',
+            'LunarLander-v3',
         ], 'Environment not supported. See README.md for supported environments.'
 
         self.gym_env: gym.Env = gym.make(env_name)

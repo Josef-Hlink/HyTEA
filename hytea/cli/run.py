@@ -31,7 +31,7 @@ def run(args: argparse.Namespace) -> None:
 def add_run_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
     """ Add arguments to the "run" subparser. """
     parser.add_argument('--env', dest='env_name', type=str,
-        default='LunarLander-v2', help='The environment to train the agent in.'
+        default='LunarLander-v3', help='The environment to train the agent in.'
     )
     parser.add_argument('--gen', dest='num_generations', type=int,
         default=5, help='The number of generations to run the EA for.'
