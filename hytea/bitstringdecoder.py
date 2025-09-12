@@ -16,13 +16,13 @@ class BitStringDecoder:
             [v.bits for scope in self.blueprint.keys() for v in self.blueprint[scope].values()]
         )
 
-    def decode(self, bitstring: np.ndarray) -> DotDict:
+    def decode(self, bitstring_arr: np.ndarray) -> DotDict:
         """Decodes a bitstring into a configuration.
 
         ### Args:
         `np.ndarray` bitstring: The bitstring to decode.
         """
-        bitstring: str = ''.join([str(b) for b in bitstring])
+        bitstring: str = ''.join([str(b) for b in bitstring_arr])
         config = DotDict(agent=DotDict(), network=DotDict(), optimizer=DotDict())
 
         for scope in config.keys():
@@ -39,7 +39,7 @@ class BitStringDecoder:
         """Separator for the bitstring."""
         string = '|'
         for scope in self.blueprint.keys():
-            for k, v in self.blueprint[scope].items():
+            for _, v in self.blueprint[scope].items():
                 num_spaces = 1 + (v.bits - 1) * 2
                 string += ' ' * num_spaces + '|'
         return string

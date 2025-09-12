@@ -1,13 +1,16 @@
+# pyright: reportOptionalMemberAccess=false
+
 import argparse
 from pathlib import Path
 from time import perf_counter
 
 import torch
+from gymnasium.spaces import Discrete
 from yaml import safe_load
 
 from hytea import Agent, Environment, Model
 from hytea.utils import DotDict
-from hytea.utils.wblog import WandbLogger, create_random_name
+from hytea.utils.wblog import DummyLogger, WandbLogger, create_random_name
 
 
 def test(args: argparse.Namespace) -> None:
@@ -18,9 +21,11 @@ def test(args: argparse.Namespace) -> None:
 
     device = torch.device('cpu')
     env = Environment(env_name=args.env_name, device=device)
+    assert env.observation_space.shape is not None
+    assert isinstance(env.action_space, Discrete)
     model = Model(
         input_size=env.observation_space.shape[0],
-        output_size=env.action_space.n,
+        output_size=int(env.action_space.n),
         hidden_size=blueprint.network.hidden_size.default,
         hidden_activation=blueprint.network.hidden_activation.default,
         num_layers=blueprint.network.num_layers.default,
@@ -49,8 +54,10 @@ def test(args: argparse.Namespace) -> None:
                 wandb_team=args.wandb_team,
                 group_name=args.group_name,
                 job_type=create_random_name(),
-                config={},
+                config=DotDict(),
             )
+        else:
+            logger = DummyLogger()
 
         start = perf_counter()
         history = agent.train(num_episodes=args.num_train_episodes, env=env)

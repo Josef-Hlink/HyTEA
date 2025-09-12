@@ -1,12 +1,16 @@
-from time import perf_counter
+# pyright: reportOptionalMemberAccess=false
 
+from time import perf_counter
+from typing import cast
+
+from gymnasium.spaces import Discrete
 import numpy as np
 import torch
 
 from hytea import Agent, Environment, Model
 from hytea.bitstringdecoder import BitStringDecoder
 from hytea.utils import DotDict
-from hytea.utils.wblog import WandbLogger
+from hytea.utils.wblog import DummyLogger, WandbLogger
 
 
 class FitnessFunction:
@@ -22,11 +26,11 @@ class FitnessFunction:
         `BitStringDecoder` decoder: The decoder to use.
         """
         self.decoder = decoder
-        self.env_name: str = args.env_name
-        self.num_train_episodes: int = args.num_train_episodes
-        self.num_test_episodes: int = args.num_test_episodes
-        self.num_runs: int = args.num_runs
-        self.D: bool = args.debug
+        self.env_name = cast(str, args.env_name)
+        self.num_train_episodes = cast(int, args.num_train_episodes)
+        self.num_test_episodes = cast(int, args.num_test_episodes)
+        self.num_runs = cast(int, args.num_runs)
+        self.D = cast(bool, args.debug)
         self.args = args
         self.device = torch.device('cpu')
         return
@@ -63,19 +67,22 @@ class FitnessFunction:
     def evaluate_single(self, config: DotDict, group_name: str, job_type_name: str) -> float:
         """Helper (one run)"""
         if self.args.use_wandb:
-            # config.update(**self.args, group_name=group_name, job_type=job_type_name)
             logger = WandbLogger(
-                project_name=self.args.project_name,
-                wandb_team=self.args.wandb_team,
+                project_name=cast(str, self.args.project_name),
+                wandb_team=cast(str, self.args.wandb_team),
                 group_name=group_name,
                 job_type=job_type_name,
                 config=config,
             )
+        else:
+            logger = DummyLogger()
         env = Environment(env_name=self.env_name, device=self.device)
 
+        assert env.observation_space.shape is not None
+        assert isinstance(env.action_space, Discrete)
         model = Model(
             input_size=env.observation_space.shape[0],
-            output_size=env.action_space.n,
+            output_size=int(env.action_space.n),
             hidden_size=config.network.hidden_size,
             hidden_activation=config.network.hidden_activation,
             num_layers=config.network.num_layers,
@@ -100,17 +107,15 @@ class FitnessFunction:
         start = perf_counter()
         history = agent.train(num_episodes=self.num_train_episodes, env=env)
 
-        if self.args.use_wandb:
-            for i, h in enumerate(history):
-                logger.log({'train_reward': h}, step=i)
+        for i, h in enumerate(history):
+            logger.log({'train_reward': h}, step=i)
 
         end = perf_counter()
         if self.D:
             print(f'Training took {end - start} seconds.')
         test_reward = agent.test(num_episodes=self.num_test_episodes)
 
-        if self.args.use_wandb:
-            logger.update_summary({'test_reward': test_reward})
-            logger.finish()
+        logger.update_summary({'test_reward': test_reward})
+        logger.finish()
 
         return test_reward

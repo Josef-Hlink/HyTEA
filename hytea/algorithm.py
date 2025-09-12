@@ -1,4 +1,5 @@
 from multiprocessing import Pool
+from typing import cast
 
 import numpy as np
 
@@ -26,11 +27,11 @@ class EvolutionaryAlgorithm:
             This will be used to evaluate the population, and to get the size of a candidate bitstring.
         """
 
-        self.num_generations: int = args.num_generations
-        self.population_size: int = args.population_size
+        self.num_generations = cast(int, args.num_generations)
+        self.population_size = cast(int, args.population_size)
 
-        self.mu_: int = args.population_size // 2
-        self.lambda_: int = args.population_size - self.mu_
+        self.mu_ = cast(int, args.population_size) // 2
+        self.lambda_ = cast(int, args.population_size) - self.mu_
         self.mutation_rate = 0.1
 
         self.evaluate = fitness_function.evaluate
@@ -68,7 +69,7 @@ class EvolutionaryAlgorithm:
 
     def evaluate_population(self, gen: int) -> np.ndarray:
         """Evaluate the population by training and testing the bitstrings."""
-        group_name = create_group_name(self.args, gen)
+        group_name = create_group_name(gen)
         with Pool() as pool:
             return np.array(
                 pool.starmap(

@@ -1,4 +1,5 @@
 import gymnasium as gym
+from gymnasium.envs.registration import EnvSpec
 import torch
 
 
@@ -17,11 +18,11 @@ class Environment:
         state, _ = self.gym_env.reset()
         return torch.tensor(state, dtype=torch.float32, device=self.device)
 
-    def step(self, action: int) -> torch.Tensor:
+    def step(self, action: int) -> tuple[torch.Tensor, float, bool, bool, dict]:
         state, reward, done, trunc, info = self.gym_env.step(action)
         return (
             torch.tensor(state, dtype=torch.float32, device=self.device),
-            reward,
+            float(reward),
             done,
             trunc,
             info,
@@ -36,5 +37,6 @@ class Environment:
         return self.gym_env.action_space
 
     @property
-    def spec(self) -> gym.envs.registration.EnvSpec:
+    def spec(self) -> EnvSpec:
+        assert self.gym_env.spec is not None
         return self.gym_env.spec

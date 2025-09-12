@@ -1,3 +1,4 @@
+from typing import Optional
 import torch
 from torch.distributions import Categorical
 from torch.nn import functional as F
@@ -32,7 +33,7 @@ class Agent:
         self.bl_sub = bl_sub
 
         self.trained = False
-        self.env = None
+        self.env: Optional[Environment] = None
         return
 
     def train(self, num_episodes: int, env: Environment) -> list[float]:
@@ -78,19 +79,21 @@ class Agent:
         ### Returns:
         `Trajectory`: the sampled episode.
         """
+        assert self.env is not None, 'Environment must be set before sampling an episode.'
+        assert self.env.spec.max_episode_steps is not None
         trajectory = Trajectory(self.env.spec.max_episode_steps, self.device)
         state, done = self.env.reset(), False
         while not done:
             probs, value = self.model(state)
             dist = Categorical(probs)
             action = dist.sample()
-            next_state, reward, done, trunc, _ = self.env.step(action.item())
+            next_state, reward, done, trunc, _ = self.env.step(int(action.item()))
             done = done or trunc
             trajectory.add(dist.log_prob(action), dist.entropy(), value, reward)
             state = next_state
         return trajectory
 
-    def _learn(self, trajectory: Trajectory, baseline=True) -> None:
+    def _learn(self, trajectory: Trajectory) -> None:
         """Learns from a trajectory using the actor-critic algorithm.
 
         ### Args:

@@ -50,10 +50,36 @@ class WandbLogger:
         self.run.log({}, commit=True)
         return
 
-    def finish(self) -> bool:
+    def finish(self) -> None:
         """Finish wandb run."""
         self.commit()
-        return self.run.finish()
+        self.run.finish()
+        return
+
+
+class DummyLogger:
+    """Dummy logger that does nothing."""
+
+    def __init__(self) -> None:
+        return
+
+    def log(self, data, step, commit=False) -> None:
+        _, _, _ = data, step, commit
+        return
+
+    def log_config(self, config: dict) -> None:
+        _ = config
+        return
+
+    def update_summary(self, data: dict) -> None:
+        _ = data
+        return
+
+    def commit(self) -> None:
+        return
+
+    def finish(self) -> None:
+        return
 
 
 def create_random_name() -> str:
@@ -61,7 +87,7 @@ def create_random_name() -> str:
     return get_name()
 
 
-def create_group_name(config: DotDict, gen: int) -> str:
+def create_group_name(gen: int) -> str:
     """Create a group name for a generation."""
     return f'Gen{gen}'
 

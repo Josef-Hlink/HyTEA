@@ -39,9 +39,9 @@ class Trajectory:
         """Returns the total reward of the trajectory."""
         return self.R[: self.l].sum().item()
 
-    def unpack(self) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    def unpack(self) -> tuple[torch.Tensor, ...]:
         """Returns the trajectory as a tuple of tensors."""
-        return map(lambda x: x[: self.l], (self.P, self.E, self.V, self.R))
+        return tuple(x[: self.l] for x in (self.P, self.E, self.V, self.R))
 
     def __len__(self) -> int:
         """Returns the number of transitions in the trajectory."""
