@@ -1,9 +1,11 @@
 # python stuff
 venv
+.venv
 __pycache__
 hytea.egg-info
 
 # general
+.env
 .vscode
 wandb
 results

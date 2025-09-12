@@ -18,33 +18,22 @@ But it should be easy to extend to other environments.
 
 ## Setup
 
-1. Clone the repository
-
-2. Create & activate a virtual environment
-
-You'll need Python 3.11.0 or higher.
-The easiest way to get it (if you don't already have it) is to create a virtual environment using [conda](https://docs.conda.io/en/latest/):
+Clone and navigate to this repository and simply run `uv sync` if you have [uv](https://uv.readthedocs.io/en/latest/) installed.
+Alternatively, you can manually create a virtual environment and pull the dependencies from [pyproject.toml](pyproject.toml) like so:
 
 ```bash
-conda create -n hytea python==3.11.0
-conda activate hytea
-```
-
-If you already have Python 3.11.0, just do:
-    
-```bash
-python -m venv hytea
-source hytea/bin/activate
-```
-
-3. Install the requirements using:
-```bash
+python -m venv .venv
+source .venv/bin/activate
 pip install -e .
 ```
 
+> [!CAUTION]
+> if you run into issues pulling the "gymnasium[box2d]" dependency,
+> you may need to `sudo apt install swig` (or your system's equivalent).
+
 ## Usage
 
-After installation: the following scripts will become available in your virtual environment:
+After installation, the following scripts will become available in your virtual environment:
 
 ```bash
 hytea run  # runs the complete hyperparameter tuning process
