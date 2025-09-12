@@ -3,7 +3,7 @@
 
 import argparse
 
-from hytea.cli import run, add_run_args, decode, add_decode_args, test, add_test_args
+from hytea.cli import add_decode_args, add_run_args, add_test_args, decode, run, test
 
 
 def main() -> None:

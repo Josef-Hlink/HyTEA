@@ -1,8 +1,8 @@
 import numpy as np
-import wandb
 from randomname import get_name
-from hytea.utils import DotDict
 
+import wandb
+from hytea.utils import DotDict
 
 # log hyperparameters to wandb
 # at init intialize wandb run

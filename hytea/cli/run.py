@@ -1,13 +1,13 @@
 import argparse
 from pathlib import Path
 
-from hytea.utils import DotDict
+from yaml import safe_load
+
+from hytea.algorithm import EvolutionaryAlgorithm
 from hytea.bitstringdecoder import BitStringDecoder
 from hytea.fitness import FitnessFunction
-from hytea.algorithm import EvolutionaryAlgorithm
+from hytea.utils import DotDict
 from hytea.utils.wblog import create_project_name
-
-from yaml import safe_load
 
 
 def run(args: argparse.Namespace) -> None:

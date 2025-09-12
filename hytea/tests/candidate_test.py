@@ -1,10 +1,8 @@
 
 # creating combinations of 0 and 1
-from itertools import product
-
-from hytea.candidate import Candidate
 
 import numpy as np
+from hytea.candidate import Candidate
 
 C1 = Candidate(np.zeros(18))
 

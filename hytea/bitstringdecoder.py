@@ -1,6 +1,6 @@
-from hytea.utils import DotDict
-
 import numpy as np
+
+from hytea.utils import DotDict
 
 
 class BitStringDecoder():

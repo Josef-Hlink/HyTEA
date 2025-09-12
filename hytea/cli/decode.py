@@ -1,11 +1,11 @@
 import argparse
 from pathlib import Path
 
-from hytea.utils import DotDict
-from hytea.bitstringdecoder import BitStringDecoder
-
-from yaml import safe_load
 import numpy as np
+from yaml import safe_load
+
+from hytea.bitstringdecoder import BitStringDecoder
+from hytea.utils import DotDict
 
 
 def decode(args: argparse.Namespace) -> None:

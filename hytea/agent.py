@@ -1,12 +1,12 @@
-from hytea.transitions import Trajectory
-from hytea.model import Model
-from hytea.environment import Environment
-
 import torch
+from torch.distributions import Categorical
 from torch.nn import functional as F
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import StepLR
-from torch.distributions import Categorical
+
+from hytea.environment import Environment
+from hytea.model import Model
+from hytea.transitions import Trajectory
 
 
 class Agent:

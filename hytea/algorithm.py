@@ -1,9 +1,10 @@
 from multiprocessing import Pool
 
-from hytea.fitness import FitnessFunction
-from hytea.utils.wblog import create_group_name, create_job_type_name
-from hytea.utils import DotDict
 import numpy as np
+
+from hytea.fitness import FitnessFunction
+from hytea.utils import DotDict
+from hytea.utils.wblog import create_group_name, create_job_type_name
 
 
 class EvolutionaryAlgorithm:

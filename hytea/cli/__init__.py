@@ -1,3 +1,3 @@
-from .decode import decode, add_decode_args
-from .run import run, add_run_args
-from .test import test, add_test_args
+from .decode import add_decode_args, decode
+from .run import add_run_args, run
+from .test import add_test_args, test

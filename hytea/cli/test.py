@@ -1,13 +1,13 @@
-from time import perf_counter
 import argparse
 from pathlib import Path
+from time import perf_counter
 
-from hytea.utils import DotDict
-from hytea import Environment, Model, Agent
-from hytea.utils.wblog import WandbLogger, create_random_name
-
-from yaml import safe_load
 import torch
+from yaml import safe_load
+
+from hytea import Agent, Environment, Model
+from hytea.utils import DotDict
+from hytea.utils.wblog import WandbLogger, create_random_name
 
 
 def test(args: argparse.Namespace) -> None:
