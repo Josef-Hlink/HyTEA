@@ -9,7 +9,7 @@ from hytea.utils import DotDict
 
 
 def decode(args: argparse.Namespace) -> None:
-    """ Decodes a bitstring into a configuration. """
+    """Decodes a bitstring into a configuration."""
     with open(Path(__file__).resolve().parents[1] / 'config.yaml', 'r') as f:
         blueprint = DotDict.from_dict(safe_load(f))
 
@@ -19,8 +19,8 @@ def decode(args: argparse.Namespace) -> None:
 
     return
 
+
 def add_decode_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
-    """ Add arguments to the "decode" subparser. """
+    """Add arguments to the "decode" subparser."""
     parser.add_argument('bitstring', nargs='+', help='The bitstring to decode.')
     return parser
-

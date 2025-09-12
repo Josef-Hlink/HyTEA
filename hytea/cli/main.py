@@ -7,12 +7,12 @@ from hytea.cli import add_decode_args, add_run_args, add_test_args, decode, run,
 
 
 def main() -> None:
-    """ Entry point for the command line interface. """
+    """Entry point for the command line interface."""
 
     # top-level parser
     parser = argparse.ArgumentParser(
-        description = 'Hyperparameter Tuning using Evolutionary Algorithms',
-        formatter_class = argparse.ArgumentDefaultsHelpFormatter
+        description='Hyperparameter Tuning using Evolutionary Algorithms',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
     subparsers = parser.add_subparsers(dest='cmd', help='Choose one of the following subcommands:')
@@ -26,11 +26,15 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    if args.cmd == 'run': run(args)
-    elif args.cmd == 'decode': decode(args)
-    elif args.cmd == 'test': test(args)
-    else: raise ValueError(f'Unknown command: {args.cmd}')
-    
+    if args.cmd == 'run':
+        run(args)
+    elif args.cmd == 'decode':
+        decode(args)
+    elif args.cmd == 'test':
+        test(args)
+    else:
+        raise ValueError(f'Unknown command: {args.cmd}')
+
     return
 
 

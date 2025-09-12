@@ -10,19 +10,23 @@ from hytea.transitions import Trajectory
 
 
 class Agent:
-    """ Agent that learns to play an environment using the actor-critic algorithm. """
+    """Agent that learns to play an environment using the actor-critic algorithm."""
 
-    def __init__(self,
-        model: Model, optimizer: Optimizer, scheduler: StepLR,
-        gamma: float, ent_reg_weight: float, bl_sub: bool,
-        device: torch.device
+    def __init__(
+        self,
+        model: Model,
+        optimizer: Optimizer,
+        scheduler: StepLR,
+        gamma: float,
+        ent_reg_weight: float,
+        bl_sub: bool,
+        device: torch.device,
     ) -> None:
-        
         self.device = device
         self.model = model.to(self.device)
         self.optimizer = optimizer
         self.scheduler = scheduler
-        
+
         self.gamma = gamma
         self.ent_reg_weight = ent_reg_weight
         self.bl_sub = bl_sub
@@ -30,10 +34,10 @@ class Agent:
         self.trained = False
         self.env = None
         return
-    
+
     def train(self, num_episodes: int, env: Environment) -> list[float]:
-        """ Train the agent for a number of episodes. 
-        
+        """Train the agent for a number of episodes.
+
         ### Args:
         `int` num_episodes: number of episodes to train for.
         `Environment` env: environment to train on.
@@ -51,9 +55,9 @@ class Agent:
 
         self.trained = True
         return history
-    
+
     def test(self, num_episodes: int) -> float:
-        """ Test the agent for a number of episodes.
+        """Test the agent for a number of episodes.
 
         ### Args:
         `int` num_episodes: number of episodes to test for.
@@ -69,8 +73,8 @@ class Agent:
         return total_reward / num_episodes
 
     def _sample_episode(self) -> Trajectory:
-        """ Samples an episode from the environment.
-        
+        """Samples an episode from the environment.
+
         ### Returns:
         `Trajectory`: the sampled episode.
         """
@@ -87,29 +91,30 @@ class Agent:
         return trajectory
 
     def _learn(self, trajectory: Trajectory, baseline=True) -> None:
-        """ Learns from a trajectory using the actor-critic algorithm.
+        """Learns from a trajectory using the actor-critic algorithm.
 
         ### Args:
         `Trajectory` trajectory: trajectory to learn from.
         """
 
-        P, E, V, R = trajectory.unpack()         # get trajectory tensors
-        
-        G, g = [], 0                             # compute returns with clever math magic
+        P, E, V, R = trajectory.unpack()  # get trajectory tensors
+
+        G, g = [], 0  # compute returns with clever math magic
         for r in R.flip(0):
             g = r + self.gamma * g
             G.insert(0, g)
         G = torch.tensor(G, device=self.device)  # cast to tensor
-        G = (G - G.mean()) / (G.std() + 1e-8)    # normalize
+        G = (G - G.mean()) / (G.std() + 1e-8)  # normalize
 
-        if self.bl_sub: G -= V                   # subtract baseline
-        P += self.ent_reg_weight * E             # add entropy regularization
+        if self.bl_sub:
+            G -= V  # subtract baseline
+        P += self.ent_reg_weight * E  # add entropy regularization
 
-        al = -P * G                              # actor loss
-        cl = F.smooth_l1_loss(V, G)              # critic loss
+        al = -P * G  # actor loss
+        cl = F.smooth_l1_loss(V, G)  # critic loss
 
         self.optimizer.zero_grad()
-        (al + cl).sum().backward()               # backprop
+        (al + cl).sum().backward()  # backprop
         self.optimizer.step()
         self.scheduler.step()
 

@@ -3,7 +3,8 @@
 
 
 class DotDict(dict):
-    """ `dot.notation` access to dictionary attributes. """
+    """`dot.notation` access to dictionary attributes."""
+
     __getattr__ = dict.get
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
@@ -12,12 +13,15 @@ class DotDict(dict):
         return DotDict(super().copy())
 
     def pop(self, key, default=None):
-        if key in self: return super().pop(key)
-        else: return default
+        if key in self:
+            return super().pop(key)
+        else:
+            return default
 
     def to_dict(self) -> dict:
-        """ Converts the DotDict to a regular dict recursively. """
+        """Converts the DotDict to a regular dict recursively."""
         dct = {}
+
         def _parse(dct, dotdct):
             for k, v in dotdct.items():
                 if isinstance(v, DotDict):
@@ -25,13 +29,15 @@ class DotDict(dict):
                     _parse(dct[k], v)
                 else:
                     dct[k] = v
+
         _parse(dct, self)
         return dct
 
     @staticmethod
     def from_dict(dct: dict):
-        """ Converts a regular dict to a DotDict recursively. """
+        """Converts a regular dict to a DotDict recursively."""
         dotdct = DotDict()
+
         def _parse(dotdct, dct):
             for k, v in dct.items():
                 if isinstance(v, dict):
@@ -39,12 +45,14 @@ class DotDict(dict):
                     _parse(dotdct[k], v)
                 else:
                     dotdct[k] = v
+
         _parse(dotdct, dct)
         return dotdct
 
     def __str__(self):
-        """ String representation of the (nested) DotDict. """
+        """String representation of the (nested) DotDict."""
         text = 'DOTDICT\n'
+
         def _walk(dotdct, indent):
             nonlocal text
             for k, v in dotdct.items():
@@ -53,5 +61,6 @@ class DotDict(dict):
                     _walk(v, indent + '    ')
                 else:
                     text += indent + f'{k}: {v}\n'
+
         _walk(self, '')
         return text

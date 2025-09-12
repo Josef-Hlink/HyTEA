@@ -1,10 +1,10 @@
-
 # creating combinations of 0 and 1
 
 import numpy as np
 from hytea.candidate import Candidate
 
 C1 = Candidate(np.zeros(18))
+
 
 def test_nHidden():
     # loop over all combinations of 0 and 1
@@ -21,9 +21,8 @@ def test_nHidden():
         sec = np.array(bin_rep)
         # set the first two elements of the genome to sec
         C1.genome[0:2] = sec
-        assert C1.nHidden == label, \
-            f"nHidden should be {label} for {sec}, but got {C1.nHidden}"
-         
+        assert C1.nHidden == label, f'nHidden should be {label} for {sec}, but got {C1.nHidden}'
+
 
 def test_dropOutRate():
     print(C1.dropOutRate)
